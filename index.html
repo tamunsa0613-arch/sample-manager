@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サンプル管理システム</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .login-box h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .google-btn:hover {
+            background: #357abd;
+        }
+        .app-container {
+            display: none;
+        }
+        .header {
+            background: #667eea;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 20px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .user-info img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .main-content {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            padding: 10px 20px;
+            border: none;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .import-section {
+            border: 2px dashed #ddd;
+            padding: 40px;
+            text-align: center;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .import-section:hover {
+            border-color: #667eea;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #5a6fd6;
+        }
+        .btn-secondary {
+            background: #6c757d;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+        tr:hover {
+            background: #f8f9fa;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .search-box input, .search-box select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .search-box input {
+            flex: 1;
+            min-width: 200px;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .stock-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stock-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .stock-card.serum {
+            border-left-color: #dc3545;
+        }
+        .stock-card.csf {
+            border-left-color: #28a745;
+        }
+        .stock-card h4 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .stock-card .amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        .stock-card .unit {
+            font-size: 14px;
+            color: #666;
+        }
+        .history-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        .badge-serum {
+            background: #fce4e4;
+            color: #dc3545;
+        }
+        .badge-csf {
+            background: #e4f5e9;
+            color: #28a745;
+        }
+        .editable-cell {
+            cursor: pointer;
+            background: #f8f9fa;
+            border-radius: 3px;
+            padding: 5px 8px !important;
+        }
+        .editable-cell:hover {
+            background: #e9ecef;
+        }
+        .editable-cell input {
+            width: 70px;
+            padding: 3px 5px;
+            border: 1px solid #667eea;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .image-preview {
+            max-width: 100%;
+            max-height: 300px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .image-thumbnails {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        .image-thumbnails img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        .image-thumbnails img:hover {
+            border-color: #667eea;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .stat-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .clickable {
+            cursor: pointer;
+            color: #667eea;
+        }
+        .clickable:hover {
+            text-decoration: underline;
+        }
+        .alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .low-stock {
+            color: #fd7e14;
+            font-weight: bold;
+        }
+        .no-stock {
+            color: #fff;
+            background: #dc3545;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        .stock-ok {
+            color: #28a745;
+        }
+        .hidden {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .search-box {
+                flex-direction: column;
+            }
+            .search-box input {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1>サンプル管理システム</h1>
+            <p style="margin-bottom: 20px; color: #666;">都医学研サンプル管理</p>
+            <button class="google-btn" onclick="signInWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+                Googleでログイン
+            </button>
+            <p id="loginError" style="color: #dc3545; margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- メインアプリ -->
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <h1>サンプル管理システム</h1>
+            <div class="user-info">
+                <img id="userPhoto" src="" alt="">
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="signOut()">ログアウト</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- 統計 -->
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="number" id="totalSamples">0</div>
+                    <div class="label">総サンプル数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="serumCount">0</div>
+                    <div class="label">血清サンプル</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="csfCount">0</div>
+                    <div class="label">髄液サンプル</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="filterByStock('low')">
+                    <div class="number" id="lowStockCount" style="color: #fd7e14;">0</div>
+                    <div class="label">残量少</div>
+                </div>
+                <div class="stat-card" style="cursor: pointer;" onclick="filterByStock('empty')">
+                    <div class="number" id="noStockCount" style="color: #dc3545;">0</div>
+                    <div class="label">残量なし</div>
+                </div>
+            </div>
+
+            <!-- タブ -->
+            <div class="tabs">
+                <button class="tab-btn active" onclick="showTab('samples')">サンプル一覧</button>
+                <button class="tab-btn" onclick="showTab('usage')">使用履歴</button>
+                <button class="tab-btn" onclick="showTab('import')">データ取込</button>
+                <button class="tab-btn" onclick="showTab('settings')">設定</button>
+            </div>
+
+            <!-- サンプル一覧 -->
+            <div class="tab-content active" id="tab-samples">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="検索（No、施設、診断名など）" onkeyup="filterSamples()">
+                    <select id="filterType" onchange="filterSamples()">
+                        <option value="">すべての検体</option>
+                        <option value="血清">血清のみ</option>
+                        <option value="髄液">髄液のみ</option>
+                    </select>
+                    <select id="filterStock" onchange="filterSamples()">
+                        <option value="">すべての残量</option>
+                        <option value="low">残量少（200μl以下）</option>
+                        <option value="empty">残量なし</option>
+                    </select>
+                    <button class="btn" onclick="exportToCSV()">CSVエクスポート</button>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>臨床診断</th>
+                                <th>年齢</th>
+                                <th>性別</th>
+                                <th>検体</th>
+                                <th>採取日</th>
+                                <th>初期保存量</th>
+                                <th>初期解析用</th>
+                                <th>残量</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sampleTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 使用履歴 -->
+            <div class="tab-content" id="tab-usage">
+                <div class="search-box">
+                    <input type="date" id="usageStartDate" onchange="filterUsage()">
+                    <span>〜</span>
+                    <input type="date" id="usageEndDate" onchange="filterUsage()">
+                    <input type="text" id="usageSearch" placeholder="サンプルNo、使用者で検索" onkeyup="filterUsage()">
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日時</th>
+                                <th>サンプルNo</th>
+                                <th>検体種類</th>
+                                <th>区分</th>
+                                <th>使用量</th>
+                                <th>用途</th>
+                                <th>使用者</th>
+                                <th>残量</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usageTable">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- データ取込 -->
+            <div class="tab-content" id="tab-import">
+                <div class="alert alert-info">
+                    <strong>使い方:</strong> 「都医学研 sample list」のExcelファイルをドラッグ＆ドロップまたは選択してください。
+                </div>
+                <div class="import-section" id="dropZone">
+                    <p style="font-size: 48px; margin-bottom: 20px;">📁</p>
+                    <p>Excelファイルをドラッグ＆ドロップ</p>
+                    <p style="margin: 10px 0; color: #999;">または</p>
+                    <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;" onchange="handleFile(this.files[0])">
+                    <button class="btn" onclick="document.getElementById('fileInput').click()">ファイルを選択</button>
+                </div>
+                <div id="importPreview" class="hidden">
+                    <h3>インポートプレビュー</h3>
+                    <p id="importCount"></p>
+                    <div class="table-container" style="max-height: 300px;">
+                        <table>
+                            <thead id="previewHeader"></thead>
+                            <tbody id="previewBody"></tbody>
+                        </table>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-success" onclick="confirmImport()">インポート実行</button>
+                        <button class="btn btn-secondary" onclick="cancelImport()">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 設定 -->
+            <div class="tab-content" id="tab-settings">
+                <h3>残量アラート設定</h3>
+                <p style="color: #666; margin-bottom: 15px;">「残量少」として表示する閾値を設定します。</p>
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <label style="min-width: 100px;">保存用:</label>
+                        <input type="number" id="storageThreshold" style="width: 100px;" min="0" max="2000" value="200">
+                        <span>μl以下</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <label style="min-width: 100px;">解析用:</label>
+                        <input type="number" id="analysisThreshold" style="width: 100px;" min="0" max="500" value="50">
+                        <span>μl以下</span>
+                    </div>
+                </div>
+                <button class="btn" onclick="saveThresholds()">閾値を保存</button>
+
+                <hr style="margin: 30px 0;">
+
+                <h3>許可ユーザー管理</h3>
+                <p style="color: #666; margin-bottom: 15px;">ログインを許可するメールアドレスを登録してください。</p>
+                <div class="form-group">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="email" id="newUserEmail" placeholder="example@gmail.com" style="flex: 1;">
+                        <button class="btn" onclick="addAllowedUser()">追加</button>
+                    </div>
+                </div>
+                <div id="allowedUsersList" style="margin-top: 20px;"></div>
+
+                <hr style="margin: 30px 0;">
+
+                <h3>データ管理</h3>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-success" onclick="exportToExcel()">Excelでバックアップ</button>
+                    <button class="btn btn-secondary" onclick="exportAllData()" style="margin-left: 10px;">JSONでバックアップ</button>
+                    <button class="btn btn-danger" onclick="confirmDeleteAll()" style="margin-left: 10px;">全データ削除</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- サンプル詳細モーダル -->
+    <div class="modal" id="sampleModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>サンプル詳細 <span id="modalSampleNo"></span></h2>
+                <button class="modal-close" onclick="closeModal('sampleModal')">&times;</button>
+            </div>
+            <div id="sampleDetail"></div>
+        </div>
+    </div>
+
+    <!-- 使用記録モーダル -->
+    <div class="modal" id="usageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>使用記録</h2>
+                <button class="modal-close" onclick="closeModal('usageModal')">&times;</button>
+            </div>
+            <form onsubmit="recordUsage(event)">
+                <input type="hidden" id="usageSampleId">
+                <div class="form-group">
+                    <label>サンプルNo</label>
+                    <input type="text" id="usageSampleNo" readonly>
+                </div>
+                <div class="form-group">
+                    <label>検体・区分</label>
+                    <select id="usageType" required onchange="updateMaxAmount()">
+                        <option value="">選択してください</option>
+                        <option value="storage_serum">保存血清</option>
+                        <option value="analysis_serum">解析用血清</option>
+                        <option value="storage_csf">保存髄液</option>
+                        <option value="analysis_csf">解析用髄液</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>使用量 (μl)</label>
+                    <input type="number" id="usageAmount" min="1" required>
+                    <small id="remainingHint" style="color: #666;"></small>
+                </div>
+                <div class="form-group">
+                    <label>用途</label>
+                    <input type="text" id="usagePurpose" placeholder="例: BioPlex測定" required>
+                </div>
+                <div class="form-group">
+                    <label>日付</label>
+                    <input type="date" id="usageDate" required>
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">記録する</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 在庫編集モーダル -->
+    <div class="modal" id="stockModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>初期在庫設定</h2>
+                <button class="modal-close" onclick="closeModal('stockModal')">&times;</button>
+            </div>
+            <form onsubmit="updateStock(event)">
+                <input type="hidden" id="stockSampleId">
+                <div class="form-group">
+                    <label>サンプルNo</label>
+                    <input type="text" id="stockSampleNo" readonly>
+                </div>
+                <div id="stockFields"></div>
+                <button type="submit" class="btn" style="width: 100%;">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 画像アップロードモーダル -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>画像を紐付け</h2>
+                <button class="modal-close" onclick="closeModal('imageModal')">&times;</button>
+            </div>
+            <input type="hidden" id="imageSampleId">
+            <div class="form-group">
+                <label>画像ファイル</label>
+                <input type="file" id="imageFile" accept="image/*" multiple onchange="previewImages(this.files)">
+            </div>
+            <div id="imagePreviewContainer"></div>
+            <button class="btn" onclick="uploadImages()" style="width: 100%; margin-top: 15px;">アップロード</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-storage-compat.js"></script>
+
+    <script>
+        // ============================================
+        // Firebase設定（ここを自分のプロジェクトの値に変更）
+        // ============================================
+        // ============================================
+        // ↓↓↓ ここを自分のFirebaseプロジェクトの値に変更 ↓↓↓
+        // ============================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        // ============================================
+        // ↑↑↑ ここを自分のFirebaseプロジェクトの値に変更 ↑↑↑
+        // ============================================
+
+        // Firebase初期化
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // グローバル変数
+        let currentUser = null;
+        let samples = [];
+        let usageHistory = [];
+        let allowedUsers = [];
+        let pendingImportData = null;
+        let thresholds = { storage: 200, analysis: 50 };
+
+        // ============================================
+        // 認証
+        // ============================================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // 許可ユーザーリストを取得
+                await loadAllowedUsers();
+
+                // 最初のユーザーは自動的に管理者として登録
+                if (allowedUsers.length === 0) {
+                    await db.collection('allowedUsers').doc(user.email).set({
+                        email: user.email,
+                        addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        addedBy: user.email,
+                        isAdmin: true
+                    });
+                    allowedUsers.push(user.email);
+                }
+
+                if (allowedUsers.includes(user.email)) {
+                    currentUser = user;
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('userPhoto').src = user.photoURL || '';
+                    document.getElementById('userName').textContent = user.displayName || user.email;
+
+                    loadData();
+                } else {
+                    auth.signOut();
+                    document.getElementById('loginError').textContent = 'このアカウントはアクセスが許可されていません。管理者に連絡してください。';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } else {
+                document.getElementById('loginContainer').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+            }
+        });
+
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch((error) => {
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').style.display = 'block';
+            });
+        }
+
+        function signOut() {
+            auth.signOut();
+        }
+
+        async function loadAllowedUsers() {
+            const snapshot = await db.collection('allowedUsers').get();
+            allowedUsers = snapshot.docs.map(doc => doc.data().email);
+            renderAllowedUsers();
+        }
+
+        async function addAllowedUser() {
+            const email = document.getElementById('newUserEmail').value.trim();
+            if (!email) return;
+
+            await db.collection('allowedUsers').doc(email).set({
+                email: email,
+                addedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                addedBy: currentUser.email
+            });
+
+            document.getElementById('newUserEmail').value = '';
+            await loadAllowedUsers();
+        }
+
+        async function removeAllowedUser(email) {
+            if (email === currentUser.email) {
+                alert('自分自身は削除できません');
+                return;
+            }
+            if (confirm(`${email} を削除しますか？`)) {
+                await db.collection('allowedUsers').doc(email).delete();
+                await loadAllowedUsers();
+            }
+        }
+
+        function renderAllowedUsers() {
+            const container = document.getElementById('allowedUsersList');
+            container.innerHTML = allowedUsers.map(email => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; margin-bottom: 5px; border-radius: 5px;">
+                    <span>${email}</span>
+                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removeAllowedUser('${email}')">削除</button>
+                </div>
+            `).join('');
+        }
+
+        // ============================================
+        // データ読み込み
+        // ============================================
+        async function loadData() {
+            // サンプルデータ読み込み
+            const samplesSnapshot = await db.collection('samples').orderBy('no').get();
+            samples = samplesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // 使用履歴読み込み
+            const usageSnapshot = await db.collection('usageHistory').orderBy('timestamp', 'desc').get();
+            usageHistory = usageSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // 閾値設定読み込み
+            const settingsDoc = await db.collection('settings').doc('thresholds').get();
+            if (settingsDoc.exists) {
+                const data = settingsDoc.data();
+                thresholds.storage = data.storage || 200;
+                thresholds.analysis = data.analysis || 50;
+            }
+            document.getElementById('storageThreshold').value = thresholds.storage;
+            document.getElementById('analysisThreshold').value = thresholds.analysis;
+
+            renderSamples();
+            renderUsageHistory();
+            updateStats();
+        }
+
+        async function saveThresholds() {
+            thresholds.storage = parseInt(document.getElementById('storageThreshold').value) || 200;
+            thresholds.analysis = parseInt(document.getElementById('analysisThreshold').value) || 50;
+
+            await db.collection('settings').doc('thresholds').set({
+                storage: thresholds.storage,
+                analysis: thresholds.analysis,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: currentUser.email
+            });
+
+            renderSamples();
+            updateStats();
+            alert('閾値を保存しました');
+        }
+
+        // ============================================
+        // サンプル表示
+        // ============================================
+        function renderSamples() {
+            const tbody = document.getElementById('sampleTable');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value;
+            const filterStock = document.getElementById('filterStock').value;
+
+            const filtered = samples.filter(s => {
+                const matchSearch = !searchTerm ||
+                    s.no?.toLowerCase().includes(searchTerm) ||
+                    s.diagnosis?.toLowerCase().includes(searchTerm) ||
+                    s.identifier?.toLowerCase().includes(searchTerm);
+
+                const matchType = !filterType || s.sampleType === filterType;
+
+                let matchStock = true;
+                if (filterStock === 'low') {
+                    const remaining = getRemaining(s);
+                    matchStock = remaining.storage <= thresholds.storage || remaining.analysis <= thresholds.analysis;
+                } else if (filterStock === 'empty') {
+                    const remaining = getRemaining(s);
+                    matchStock = remaining.storage <= 0 || remaining.analysis <= 0;
+                }
+
+                return matchSearch && matchType && matchStock;
+            });
+
+            tbody.innerHTML = filtered.map(s => {
+                const remaining = getRemaining(s);
+                const isSerum = s.sampleType === '血清';
+                const badgeClass = isSerum ? 'badge-serum' : 'badge-csf';
+                const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+                const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+                const initial = s.initialStock || {};
+                const storageInitial = initial[storageKey] || 500;
+                const analysisInitial = initial[analysisKey] || 200;
+
+                return `
+                    <tr>
+                        <td class="clickable" onclick="showSampleDetail('${s.id}')">${s.no || ''}</td>
+                        <td>${s.diagnosis || ''}</td>
+                        <td>${s.age || ''}</td>
+                        <td>${s.sex || ''}</td>
+                        <td><span class="badge ${badgeClass}">${s.sampleType || ''}</span></td>
+                        <td>${formatDate(s.collectionDate)}</td>
+                        <td class="editable-cell" onclick="editInitialStock('${s.id}', 'storage', ${storageInitial}, this)">${storageInitial}μl</td>
+                        <td class="editable-cell" onclick="editInitialStock('${s.id}', 'analysis', ${analysisInitial}, this)">${analysisInitial}μl</td>
+                        <td>${formatRemaining(remaining.storage, 'storage')} / ${formatRemaining(remaining.analysis, 'analysis')}</td>
+                        <td>
+                            <button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="openUsageModal('${s.id}')">使用</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterSamples() {
+            renderSamples();
+        }
+
+        function filterByStock(stockType) {
+            document.getElementById('filterStock').value = stockType;
+            showTab('samples');
+            filterSamples();
+        }
+
+        function getRemaining(sample) {
+            const isSerum = sample.sampleType === '血清';
+            const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+            const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+
+            const initial = sample.initialStock || {};
+            const storageInitial = initial[storageKey] || 500;
+            const analysisInitial = initial[analysisKey] || 200;
+
+            // 使用量を計算
+            const usages = usageHistory.filter(u => u.sampleId === sample.id);
+            const storageUsed = usages.filter(u => u.type === storageKey).reduce((sum, u) => sum + (u.amount || 0), 0);
+            const analysisUsed = usages.filter(u => u.type === analysisKey).reduce((sum, u) => sum + (u.amount || 0), 0);
+
+            return {
+                storage: Math.max(0, storageInitial - storageUsed),
+                analysis: Math.max(0, analysisInitial - analysisUsed)
+            };
+        }
+
+        function formatDate(date) {
+            if (!date) return '';
+            if (date.toDate) date = date.toDate();
+            if (typeof date === 'string') date = new Date(date);
+            return date.toLocaleDateString('ja-JP');
+        }
+
+        function formatRemaining(amount, type) {
+            const threshold = type === 'storage' ? thresholds.storage : thresholds.analysis;
+            if (amount <= 0) {
+                return `<span class="no-stock">なし</span>`;
+            } else if (amount <= threshold) {
+                return `<span class="low-stock">${amount}μl</span>`;
+            } else {
+                return `<span class="stock-ok">${amount}μl</span>`;
+            }
+        }
+
+        // ============================================
+        // サンプル詳細
+        // ============================================
+        async function showSampleDetail(sampleId) {
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample) return;
+
+            const remaining = getRemaining(sample);
+            const isSerum = sample.sampleType === '血清';
+            const sampleUsages = usageHistory.filter(u => u.sampleId === sampleId);
+
+            document.getElementById('modalSampleNo').textContent = sample.no;
+
+            let imagesHtml = '';
+            if (sample.images && sample.images.length > 0) {
+                imagesHtml = `
+                    <h4 style="margin-top: 20px;">紐付け画像</h4>
+                    <div class="image-thumbnails">
+                        ${sample.images.map(img => `<img src="${img}" onclick="window.open('${img}', '_blank')">`).join('')}
+                    </div>
+                `;
+            }
+
+            document.getElementById('sampleDetail').innerHTML = `
+                <div class="stock-info">
+                    <div class="stock-card ${isSerum ? 'serum' : 'csf'}">
+                        <h4>保存${sample.sampleType}</h4>
+                        <span class="amount ${remaining.storage <= 200 ? 'low-stock' : ''}">${remaining.storage}</span>
+                        <span class="unit">μl</span>
+                    </div>
+                    <div class="stock-card ${isSerum ? 'serum' : 'csf'}">
+                        <h4>解析用${sample.sampleType}</h4>
+                        <span class="amount ${remaining.analysis <= 0 ? 'low-stock' : ''}">${remaining.analysis}</span>
+                        <span class="unit">μl</span>
+                    </div>
+                </div>
+
+                <table style="margin-bottom: 20px;">
+                    <tr><th style="width: 120px;">臨床診断</th><td>${sample.diagnosis || '-'}</td></tr>
+                    <tr><th>年齢</th><td>${sample.age || '-'}</td></tr>
+                    <tr><th>性別</th><td>${sample.sex || '-'}</td></tr>
+                    <tr><th>識別番号</th><td>${sample.identifier || '-'}</td></tr>
+                    <tr><th>採取日</th><td>${formatDate(sample.collectionDate)}</td></tr>
+                </table>
+
+                ${imagesHtml}
+
+                <div style="margin-top: 20px;">
+                    <button class="btn" onclick="openUsageModal('${sampleId}')">使用を記録</button>
+                    <button class="btn btn-secondary" onclick="openImageModal('${sampleId}')">画像を追加</button>
+                </div>
+
+                <h4 style="margin-top: 20px;">使用履歴</h4>
+                ${sampleUsages.length === 0 ? '<p style="color: #999;">使用履歴はありません</p>' :
+                    sampleUsages.map(u => `
+                        <div class="history-item">
+                            <div>
+                                <strong>${formatDate(u.timestamp)}</strong> - ${u.purpose || ''}<br>
+                                <small style="color: #666;">${getTypeLabel(u.type)}: ${u.amount}μl (${u.userName || ''})</small>
+                            </div>
+                        </div>
+                    `).join('')
+                }
+            `;
+
+            document.getElementById('sampleModal').classList.add('active');
+        }
+
+        function getTypeLabel(type) {
+            const labels = {
+                'storage_serum': '保存血清',
+                'analysis_serum': '解析用血清',
+                'storage_csf': '保存髄液',
+                'analysis_csf': '解析用髄液'
+            };
+            return labels[type] || type;
+        }
+
+        // ============================================
+        // 使用記録
+        // ============================================
+        function openUsageModal(sampleId) {
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample) return;
+
+            document.getElementById('usageSampleId').value = sampleId;
+            document.getElementById('usageSampleNo').value = sample.no;
+            document.getElementById('usageDate').value = new Date().toISOString().split('T')[0];
+
+            // 検体タイプに応じて選択肢を制限
+            const typeSelect = document.getElementById('usageType');
+            const isSerum = sample.sampleType === '血清';
+            typeSelect.innerHTML = `
+                <option value="">選択してください</option>
+                ${isSerum ? `
+                    <option value="storage_serum">保存血清</option>
+                    <option value="analysis_serum">解析用血清</option>
+                ` : `
+                    <option value="storage_csf">保存髄液</option>
+                    <option value="analysis_csf">解析用髄液</option>
+                `}
+            `;
+
+            document.getElementById('usageAmount').value = '';
+            document.getElementById('usagePurpose').value = '';
+            document.getElementById('remainingHint').textContent = '';
+
+            closeModal('sampleModal');
+            document.getElementById('usageModal').classList.add('active');
+        }
+
+        function updateMaxAmount() {
+            const sampleId = document.getElementById('usageSampleId').value;
+            const type = document.getElementById('usageType').value;
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample || !type) return;
+
+            const remaining = getRemaining(sample);
+            const isStorage = type.includes('storage');
+            const max = isStorage ? remaining.storage : remaining.analysis;
+
+            document.getElementById('usageAmount').max = max;
+            document.getElementById('remainingHint').textContent = `残量: ${max}μl`;
+        }
+
+        // インライン編集機能
+        function editInitialStock(sampleId, type, currentValue, cell) {
+            // 既に編集中なら何もしない
+            if (cell.querySelector('input')) return;
+
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.value = currentValue;
+            input.min = 0;
+            input.max = 5000;
+
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(input);
+            input.focus();
+            input.select();
+
+            const save = async () => {
+                const newValue = parseInt(input.value) || 0;
+                if (newValue !== currentValue) {
+                    const sample = samples.find(s => s.id === sampleId);
+                    const isSerum = sample.sampleType === '血清';
+                    const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+                    const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+                    const key = type === 'storage' ? storageKey : analysisKey;
+
+                    const currentStock = sample.initialStock || {};
+                    await db.collection('samples').doc(sampleId).update({
+                        initialStock: {
+                            ...currentStock,
+                            [key]: newValue
+                        }
+                    });
+                    await loadData();
+                } else {
+                    cell.innerHTML = originalContent;
+                }
+            };
+
+            input.addEventListener('blur', save);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    cell.innerHTML = originalContent;
+                }
+            });
+        }
+
+        async function recordUsage(event) {
+            event.preventDefault();
+
+            const sampleId = document.getElementById('usageSampleId').value;
+            const type = document.getElementById('usageType').value;
+            const amount = parseInt(document.getElementById('usageAmount').value);
+            const purpose = document.getElementById('usagePurpose').value;
+            const date = document.getElementById('usageDate').value;
+            const sample = samples.find(s => s.id === sampleId);
+
+            // 残量チェック
+            const remaining = getRemaining(sample);
+            const isStorage = type.includes('storage');
+            const currentRemaining = isStorage ? remaining.storage : remaining.analysis;
+
+            if (amount > currentRemaining) {
+                alert(`使用量が残量（${currentRemaining}μl）を超えています`);
+                return;
+            }
+
+            await db.collection('usageHistory').add({
+                sampleId: sampleId,
+                sampleNo: sample.no,
+                type: type,
+                amount: amount,
+                purpose: purpose,
+                timestamp: new Date(date),
+                userId: currentUser.uid,
+                userName: currentUser.displayName || currentUser.email,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+
+            closeModal('usageModal');
+            await loadData();
+            alert('使用を記録しました');
+        }
+
+        // ============================================
+        // 在庫設定
+        // ============================================
+        function openStockModal(sampleId) {
+            const sample = samples.find(s => s.id === sampleId);
+            if (!sample) return;
+
+            document.getElementById('stockSampleId').value = sampleId;
+            document.getElementById('stockSampleNo').value = sample.no;
+
+            const isSerum = sample.sampleType === '血清';
+            const initial = sample.initialStock || {};
+
+            document.getElementById('stockFields').innerHTML = `
+                <div class="form-group">
+                    <label>保存${sample.sampleType} 初期量 (μl)</label>
+                    <input type="number" id="stockStorage" value="${initial[isSerum ? 'storage_serum' : 'storage_csf'] || 500}" min="0" max="2000">
+                    <small style="color: #666;">通常: 500〜2000μl</small>
+                </div>
+                <div class="form-group">
+                    <label>解析用${sample.sampleType} 初期量 (μl)</label>
+                    <input type="number" id="stockAnalysis" value="${initial[isSerum ? 'analysis_serum' : 'analysis_csf'] || 200}" min="0" max="500">
+                    <small style="color: #666;">通常: 200μl</small>
+                </div>
+            `;
+
+            document.getElementById('stockModal').classList.add('active');
+        }
+
+        async function updateStock(event) {
+            event.preventDefault();
+
+            const sampleId = document.getElementById('stockSampleId').value;
+            const sample = samples.find(s => s.id === sampleId);
+            const isSerum = sample.sampleType === '血清';
+
+            const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+            const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+
+            await db.collection('samples').doc(sampleId).update({
+                initialStock: {
+                    [storageKey]: parseInt(document.getElementById('stockStorage').value),
+                    [analysisKey]: parseInt(document.getElementById('stockAnalysis').value)
+                }
+            });
+
+            closeModal('stockModal');
+            await loadData();
+            alert('在庫を更新しました');
+        }
+
+        // ============================================
+        // 画像アップロード
+        // ============================================
+        function openImageModal(sampleId) {
+            document.getElementById('imageSampleId').value = sampleId;
+            document.getElementById('imageFile').value = '';
+            document.getElementById('imagePreviewContainer').innerHTML = '';
+            document.getElementById('imageModal').classList.add('active');
+        }
+
+        function previewImages(files) {
+            const container = document.getElementById('imagePreviewContainer');
+            container.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'image-preview';
+                    container.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        async function uploadImages() {
+            const sampleId = document.getElementById('imageSampleId').value;
+            const files = document.getElementById('imageFile').files;
+            if (files.length === 0) return;
+
+            const sample = samples.find(s => s.id === sampleId);
+            const existingImages = sample.images || [];
+            const newImages = [];
+
+            for (const file of files) {
+                const ref = storage.ref(`samples/${sampleId}/${Date.now()}_${file.name}`);
+                await ref.put(file);
+                const url = await ref.getDownloadURL();
+                newImages.push(url);
+            }
+
+            await db.collection('samples').doc(sampleId).update({
+                images: [...existingImages, ...newImages]
+            });
+
+            closeModal('imageModal');
+            await loadData();
+            showSampleDetail(sampleId);
+            alert('画像をアップロードしました');
+        }
+
+        // ============================================
+        // 使用履歴表示
+        // ============================================
+        function renderUsageHistory() {
+            const tbody = document.getElementById('usageTable');
+            const startDate = document.getElementById('usageStartDate').value;
+            const endDate = document.getElementById('usageEndDate').value;
+            const search = document.getElementById('usageSearch').value.toLowerCase();
+
+            const filtered = usageHistory.filter(u => {
+                const date = u.timestamp?.toDate ? u.timestamp.toDate() : new Date(u.timestamp);
+                const matchStart = !startDate || date >= new Date(startDate);
+                const matchEnd = !endDate || date <= new Date(endDate + 'T23:59:59');
+                const matchSearch = !search ||
+                    u.sampleNo?.toLowerCase().includes(search) ||
+                    u.userName?.toLowerCase().includes(search);
+                return matchStart && matchEnd && matchSearch;
+            });
+
+            tbody.innerHTML = filtered.map(u => {
+                const sample = samples.find(s => s.id === u.sampleId);
+                const remaining = sample ? getRemaining(sample) : { storage: '-', analysis: '-' };
+                const isStorage = u.type?.includes('storage');
+
+                return `
+                    <tr>
+                        <td>${formatDate(u.timestamp)}</td>
+                        <td class="clickable" onclick="showSampleDetail('${u.sampleId}')">${u.sampleNo || ''}</td>
+                        <td>${sample?.sampleType || ''}</td>
+                        <td>${getTypeLabel(u.type)}</td>
+                        <td>${u.amount}μl</td>
+                        <td>${u.purpose || ''}</td>
+                        <td>${u.userName || ''}</td>
+                        <td>${isStorage ? remaining.storage : remaining.analysis}μl</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterUsage() {
+            renderUsageHistory();
+        }
+
+        // ============================================
+        // データインポート
+        // ============================================
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#667eea';
+            dropZone.style.background = '#f0f0ff';
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = '#ddd';
+            dropZone.style.background = 'transparent';
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = '#ddd';
+            dropZone.style.background = 'transparent';
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                // Sampleシートを探す
+                const sheetName = workbook.SheetNames.find(n => n.toLowerCase().includes('sample')) || workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+
+                // ヘッダー行を探す
+                let headerRow = 0;
+                for (let i = 0; i < Math.min(10, json.length); i++) {
+                    if (json[i] && json[i].some(cell => cell && cell.toString().includes('No'))) {
+                        headerRow = i;
+                        break;
+                    }
+                }
+
+                const headers = json[headerRow];
+                const rows = json.slice(headerRow + 1).filter(row => row && row.length > 1 && row.some(cell => cell));
+
+                // カラムインデックスを特定
+                const findCol = (keywords) => headers.findIndex(h => h && keywords.some(k => h.toString().includes(k)));
+
+                const cols = {
+                    no: findCol(['No']),
+                    // 施設名・担当医は個人情報保護のため読み込まない
+                    diagnosis: findCol(['臨床診断', '診断']),
+                    age: findCol(['年齢']),
+                    sex: findCol(['性別']),
+                    identifier: findCol(['識別番号']),
+                    sampleType: findCol(['検体']),
+                    collectionDate: findCol(['採取日'])
+                };
+
+                pendingImportData = rows.map(row => ({
+                    no: row[cols.no]?.toString() || '',
+                    diagnosis: row[cols.diagnosis]?.toString() || '',
+                    age: row[cols.age] || '',
+                    sex: row[cols.sex]?.toString() || '',
+                    identifier: row[cols.identifier]?.toString() || '',
+                    sampleType: row[cols.sampleType]?.toString() || '',
+                    collectionDate: parseExcelDate(row[cols.collectionDate])
+                })).filter(s => s.no && s.sampleType);
+
+                // プレビュー表示
+                document.getElementById('importPreview').classList.remove('hidden');
+                document.getElementById('importCount').textContent = `${pendingImportData.length}件のサンプルをインポートします`;
+
+                document.getElementById('previewHeader').innerHTML = `
+                    <tr>
+                        <th>No</th><th>診断</th><th>年齢</th><th>性別</th><th>検体</th><th>採取日</th>
+                    </tr>
+                `;
+
+                document.getElementById('previewBody').innerHTML = pendingImportData.slice(0, 20).map(s => `
+                    <tr>
+                        <td>${s.no}</td>
+                        <td>${s.diagnosis}</td>
+                        <td>${s.age}</td>
+                        <td>${s.sex}</td>
+                        <td>${s.sampleType}</td>
+                        <td>${formatDate(s.collectionDate)}</td>
+                    </tr>
+                `).join('');
+
+                if (pendingImportData.length > 20) {
+                    document.getElementById('previewBody').innerHTML += `
+                        <tr><td colspan="7" style="text-align: center; color: #999;">... 他 ${pendingImportData.length - 20}件</td></tr>
+                    `;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseExcelDate(value) {
+            if (!value) return null;
+            try {
+                if (typeof value === 'number') {
+                    // Excelのシリアル値
+                    const date = new Date((value - 25569) * 86400 * 1000);
+                    if (isNaN(date.getTime())) return null;
+                    return date;
+                }
+                const date = new Date(value);
+                if (isNaN(date.getTime())) return null;
+                return date;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        async function confirmImport() {
+            if (!pendingImportData || pendingImportData.length === 0) return;
+
+            const existingNos = new Set(samples.map(s => s.no + s.sampleType));
+
+            let imported = 0;
+            let skipped = 0;
+            let batch = db.batch();
+            let batchCount = 0;
+
+            for (const sample of pendingImportData) {
+                const key = sample.no + sample.sampleType;
+                if (existingNos.has(key)) {
+                    skipped++;
+                    continue;
+                }
+
+                const ref = db.collection('samples').doc();
+                const sampleData = {
+                    no: sample.no || '',
+                    diagnosis: sample.diagnosis || '',
+                    age: sample.age || '',
+                    sex: sample.sex || '',
+                    identifier: sample.identifier || '',
+                    sampleType: sample.sampleType || '',
+                    collectionDate: sample.collectionDate || null,
+                    initialStock: {
+                        storage_serum: 500,
+                        analysis_serum: 200,
+                        storage_csf: 500,
+                        analysis_csf: 200
+                    },
+                    images: [],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    createdBy: currentUser.email
+                };
+                batch.set(ref, sampleData);
+                imported++;
+                batchCount++;
+
+                // Firestoreは1バッチ500件まで
+                if (batchCount >= 400) {
+                    await batch.commit();
+                    batch = db.batch();
+                    batchCount = 0;
+                }
+            }
+
+            // 残りをコミット
+            if (batchCount > 0) {
+                await batch.commit();
+            }
+
+            cancelImport();
+            await loadData();
+            alert(`${imported}件をインポートしました。${skipped > 0 ? `（${skipped}件は既存のため省略）` : ''}`);
+        }
+
+        function cancelImport() {
+            pendingImportData = null;
+            document.getElementById('importPreview').classList.add('hidden');
+            document.getElementById('fileInput').value = '';
+        }
+
+        // ============================================
+        // エクスポート
+        // ============================================
+        function exportToCSV() {
+            const headers = ['No', '臨床診断', '年齢', '性別', '識別番号', '検体', '採取日', '保存残量', '解析用残量'];
+            const rows = samples.map(s => {
+                const remaining = getRemaining(s);
+                return [
+                    s.no, s.diagnosis, s.age, s.sex, s.identifier,
+                    s.sampleType, formatDate(s.collectionDate),
+                    remaining.storage, remaining.analysis
+                ];
+            });
+
+            const csv = [headers, ...rows].map(row => row.map(cell => `"${cell || ''}"`).join(',')).join('\n');
+            downloadFile(csv, 'samples.csv', 'text/csv');
+        }
+
+        function exportAllData() {
+            const data = {
+                samples: samples,
+                usageHistory: usageHistory,
+                exportedAt: new Date().toISOString(),
+                exportedBy: currentUser.email
+            };
+            downloadFile(JSON.stringify(data, null, 2), 'backup.json', 'application/json');
+        }
+
+        function exportToExcel() {
+            // サンプルシート用データ
+            const sampleRows = samples.map(s => {
+                const remaining = getRemaining(s);
+                const isSerum = s.sampleType === '血清';
+                const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+                const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+                const initial = s.initialStock || {};
+                return {
+                    'No': s.no,
+                    '臨床診断': s.diagnosis,
+                    '年齢': s.age,
+                    '性別': s.sex,
+                    '識別番号': s.identifier,
+                    '検体': s.sampleType,
+                    '採取日': formatDate(s.collectionDate),
+                    '初期保存量(μl)': initial[storageKey] || 500,
+                    '初期解析用(μl)': initial[analysisKey] || 200,
+                    '保存残量(μl)': remaining.storage,
+                    '解析用残量(μl)': remaining.analysis
+                };
+            });
+
+            // 使用履歴シート用データ
+            const usageRows = usageHistory.map(u => {
+                const sample = samples.find(s => s.id === u.sampleId);
+                return {
+                    '日時': formatDate(u.timestamp),
+                    'サンプルNo': u.sampleNo,
+                    '検体種類': sample?.sampleType || '',
+                    '区分': getTypeLabel(u.type),
+                    '使用量(μl)': u.amount,
+                    '用途': u.purpose,
+                    '使用者': u.userName
+                };
+            });
+
+            // ワークブック作成
+            const wb = XLSX.utils.book_new();
+
+            // サンプルシート追加
+            const sampleSheet = XLSX.utils.json_to_sheet(sampleRows);
+            XLSX.utils.book_append_sheet(wb, sampleSheet, 'サンプル一覧');
+
+            // 使用履歴シート追加
+            const usageSheet = XLSX.utils.json_to_sheet(usageRows);
+            XLSX.utils.book_append_sheet(wb, usageSheet, '使用履歴');
+
+            // ダウンロード
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `サンプル管理_${today}.xlsx`);
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function confirmDeleteAll() {
+            if (!confirm('本当にすべてのデータを削除しますか？この操作は取り消せません。')) return;
+            if (!confirm('最終確認：すべてのサンプルデータと使用履歴が削除されます。続行しますか？')) return;
+
+            // バッチ削除
+            const batch = db.batch();
+            samples.forEach(s => batch.delete(db.collection('samples').doc(s.id)));
+            usageHistory.forEach(u => batch.delete(db.collection('usageHistory').doc(u.id)));
+            await batch.commit();
+
+            await loadData();
+            alert('すべてのデータを削除しました');
+        }
+
+        // ============================================
+        // 統計
+        // ============================================
+        function updateStats() {
+            document.getElementById('totalSamples').textContent = samples.length;
+            document.getElementById('serumCount').textContent = samples.filter(s => s.sampleType === '血清').length;
+            document.getElementById('csfCount').textContent = samples.filter(s => s.sampleType === '髄液').length;
+
+            let lowStock = 0;
+            let noStock = 0;
+            samples.forEach(s => {
+                const remaining = getRemaining(s);
+                if (remaining.storage <= 0 || remaining.analysis <= 0) {
+                    noStock++;
+                } else if (remaining.storage <= thresholds.storage || remaining.analysis <= thresholds.analysis) {
+                    lowStock++;
+                }
+            });
+            document.getElementById('lowStockCount').textContent = lowStock;
+            document.getElementById('noStockCount').textContent = noStock;
+        }
+
+        // ============================================
+        // UI
+        // ============================================
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+
+            document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // モーダル外クリックで閉じる
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
