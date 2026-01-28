@@ -415,6 +415,8 @@
         <div class="login-box">
             <h1>サンプル管理システム</h1>
             <p style="margin-bottom: 20px; color: #666;">都医学研サンプル管理</p>
+
+            <!-- Googleログイン -->
             <button class="google-btn" onclick="signInWithGoogle()">
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                     <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
@@ -424,6 +426,30 @@
                 </svg>
                 Googleでログイン
             </button>
+
+            <div style="margin: 20px 0; color: #999; font-size: 14px;">または</div>
+
+            <!-- メール/パスワードログイン -->
+            <div id="emailLoginForm">
+                <input type="email" id="loginEmail" placeholder="メールアドレス" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                <input type="password" id="loginPassword" placeholder="パスワード" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                <button onclick="signInWithEmail()" style="width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">ログイン</button>
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                    初めての方は <a href="#" onclick="showRegisterForm(); return false;" style="color: #667eea;">新規登録</a>
+                </p>
+            </div>
+
+            <!-- 新規登録フォーム（初期は非表示） -->
+            <div id="registerForm" style="display: none;">
+                <input type="email" id="registerEmail" placeholder="メールアドレス" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                <input type="password" id="registerPassword" placeholder="パスワード（6文字以上）" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                <input type="password" id="registerPasswordConfirm" placeholder="パスワード（確認）" style="width: 100%; padding: 12px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                <button onclick="registerWithEmail()" style="width: 100%; padding: 12px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer;">新規登録</button>
+                <p style="margin-top: 15px; font-size: 14px; color: #666;">
+                    アカウントをお持ちの方は <a href="#" onclick="showLoginForm(); return false;" style="color: #667eea;">ログイン</a>
+                </p>
+            </div>
+
             <p id="loginError" style="color: #dc3545; margin-top: 15px; display: none;"></p>
         </div>
     </div>
@@ -475,7 +501,7 @@
             <!-- サンプル一覧 -->
             <div class="tab-content active" id="tab-samples">
                 <div class="search-box">
-                    <input type="text" id="searchInput" placeholder="検索（No、施設、診断名など）" onkeyup="filterSamples()">
+                    <input type="text" id="searchInput" placeholder="検索（No、診断名、識別番号など）" onkeyup="filterSamples()">
                     <select id="filterType" onchange="filterSamples()">
                         <option value="">すべての検体</option>
                         <option value="血清">血清のみ</option>
@@ -483,10 +509,17 @@
                     </select>
                     <select id="filterStock" onchange="filterSamples()">
                         <option value="">すべての残量</option>
-                        <option value="low">残量少（200μl以下）</option>
+                        <option value="low">残量少</option>
                         <option value="empty">残量なし</option>
                     </select>
-                    <button class="btn" onclick="exportToCSV()">CSVエクスポート</button>
+                </div>
+                <div class="search-box" style="margin-top: -10px;">
+                    <span style="white-space: nowrap;">No範囲:</span>
+                    <input type="text" id="noFrom" placeholder="開始（例:190001）" style="width: 130px;" onchange="filterSamples()">
+                    <span>〜</span>
+                    <input type="text" id="noTo" placeholder="終了（例:190100）" style="width: 130px;" onchange="filterSamples()">
+                    <button class="btn btn-secondary" onclick="clearRangeFilter()" style="padding: 8px 12px;">クリア</button>
+                    <button class="btn btn-success" onclick="exportFilteredExcel()">検索結果をExcel出力</button>
                 </div>
                 <div class="table-container">
                     <table>
@@ -568,29 +601,30 @@
 
             <!-- 設定 -->
             <div class="tab-content" id="tab-settings">
-                <h3>残量アラート設定</h3>
-                <p style="color: #666; margin-bottom: 15px;">「残量少」として表示する閾値を設定します。</p>
-                <div class="form-group">
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="min-width: 100px;">保存用:</label>
-                        <input type="number" id="storageThreshold" style="width: 100px;" min="0" max="2000" value="200">
-                        <span>μl以下</span>
+                <div class="admin-only">
+                    <h3>残量アラート設定</h3>
+                    <p style="color: #666; margin-bottom: 15px;">「残量少」として表示する閾値を設定します。</p>
+                    <div class="form-group">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="min-width: 100px;">保存用:</label>
+                            <input type="number" id="storageThreshold" style="width: 100px;" min="0" max="2000" value="200">
+                            <span>μl以下</span>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group">
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="min-width: 100px;">解析用:</label>
-                        <input type="number" id="analysisThreshold" style="width: 100px;" min="0" max="500" value="50">
-                        <span>μl以下</span>
+                    <div class="form-group">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="min-width: 100px;">解析用:</label>
+                            <input type="number" id="analysisThreshold" style="width: 100px;" min="0" max="500" value="50">
+                            <span>μl以下</span>
+                        </div>
                     </div>
+                    <button class="btn" onclick="saveThresholds()">閾値を保存</button>
+                    <hr style="margin: 30px 0;">
                 </div>
-                <button class="btn" onclick="saveThresholds()">閾値を保存</button>
-
-                <hr style="margin: 30px 0;">
 
                 <h3>許可ユーザー管理</h3>
                 <p style="color: #666; margin-bottom: 15px;">ログインを許可するメールアドレスを登録してください。</p>
-                <div class="form-group">
+                <div class="form-group admin-only">
                     <div style="display: flex; gap: 10px;">
                         <input type="email" id="newUserEmail" placeholder="example@gmail.com" style="flex: 1;">
                         <button class="btn" onclick="addAllowedUser()">追加</button>
@@ -604,7 +638,7 @@
                 <div style="margin-top: 15px;">
                     <button class="btn btn-success" onclick="exportToExcel()">Excelでバックアップ</button>
                     <button class="btn btn-secondary" onclick="exportAllData()" style="margin-left: 10px;">JSONでバックアップ</button>
-                    <button class="btn btn-danger" onclick="confirmDeleteAll()" style="margin-left: 10px;">全データ削除</button>
+                    <button class="btn btn-danger admin-only" onclick="confirmDeleteAll()" style="margin-left: 10px;">全データ削除</button>
                 </div>
             </div>
         </div>
@@ -708,20 +742,14 @@
         // ============================================
         // Firebase設定（ここを自分のプロジェクトの値に変更）
         // ============================================
-        // ============================================
-        // ↓↓↓ ここを自分のFirebaseプロジェクトの値に変更 ↓↓↓
-        // ============================================
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT_ID.firebasestorage.app",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyBMlMvaCxUej-X8FmbWTC4n9kBOCIPcrVA",
+            authDomain: "sample-manager2026.firebaseapp.com",
+            projectId: "sample-manager2026",
+            storageBucket: "sample-manager2026.firebasestorage.app",
+            messagingSenderId: "596999127791",
+            appId: "1:596999127791:web:bcfbe6a124542d9d0ed11a"
         };
-        // ============================================
-        // ↑↑↑ ここを自分のFirebaseプロジェクトの値に変更 ↑↑↑
-        // ============================================
 
         // Firebase初期化
         firebase.initializeApp(firebaseConfig);
@@ -783,22 +811,132 @@
             });
         }
 
+        function signInWithEmail() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                showLoginError('メールアドレスとパスワードを入力してください');
+                return;
+            }
+
+            auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    if (error.code === 'auth/user-not-found') {
+                        showLoginError('このメールアドレスは登録されていません');
+                    } else if (error.code === 'auth/wrong-password') {
+                        showLoginError('パスワードが正しくありません');
+                    } else if (error.code === 'auth/invalid-email') {
+                        showLoginError('メールアドレスの形式が正しくありません');
+                    } else {
+                        showLoginError(error.message);
+                    }
+                });
+        }
+
+        function registerWithEmail() {
+            const email = document.getElementById('registerEmail').value.trim();
+            const password = document.getElementById('registerPassword').value;
+            const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+
+            if (!email || !password) {
+                showLoginError('メールアドレスとパスワードを入力してください');
+                return;
+            }
+
+            if (password.length < 6) {
+                showLoginError('パスワードは6文字以上で入力してください');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showLoginError('パスワードが一致しません');
+                return;
+            }
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    if (error.code === 'auth/email-already-in-use') {
+                        showLoginError('このメールアドレスは既に登録されています');
+                    } else if (error.code === 'auth/invalid-email') {
+                        showLoginError('メールアドレスの形式が正しくありません');
+                    } else if (error.code === 'auth/weak-password') {
+                        showLoginError('パスワードは6文字以上で入力してください');
+                    } else {
+                        showLoginError(error.message);
+                    }
+                });
+        }
+
+        function showLoginError(message) {
+            const errorEl = document.getElementById('loginError');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('emailLoginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
+        function showLoginForm() {
+            document.getElementById('emailLoginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginError').style.display = 'none';
+        }
+
         function signOut() {
             auth.signOut();
         }
 
+        let allowedUsersData = []; // {email, isAdmin} の配列
+        let isCurrentUserAdmin = false;
+
         async function loadAllowedUsers() {
             const snapshot = await db.collection('allowedUsers').get();
-            allowedUsers = snapshot.docs.map(doc => doc.data().email);
+            allowedUsersData = snapshot.docs.map(doc => ({
+                email: doc.data().email,
+                isAdmin: doc.data().isAdmin || false
+            }));
+            allowedUsers = allowedUsersData.map(u => u.email);
+
+            // 現在のユーザーが管理者かチェック
+            const currentUserData = allowedUsersData.find(u => u.email === currentUser?.email);
+            isCurrentUserAdmin = currentUserData?.isAdmin || false;
+
             renderAllowedUsers();
+            updateAdminUI();
+        }
+
+        function updateAdminUI() {
+            // 管理者のみに表示する要素を制御
+            const adminOnlyElements = document.querySelectorAll('.admin-only');
+            adminOnlyElements.forEach(el => {
+                if (isCurrentUserAdmin) {
+                    // 元のdisplay値を復元（ボタンはinline-block、その他はblock）
+                    if (el.tagName === 'BUTTON') {
+                        el.style.display = 'inline-block';
+                    } else {
+                        el.style.display = 'block';
+                    }
+                } else {
+                    el.style.display = 'none';
+                }
+            });
         }
 
         async function addAllowedUser() {
+            if (!isCurrentUserAdmin) {
+                alert('管理者のみがユーザーを追加できます');
+                return;
+            }
             const email = document.getElementById('newUserEmail').value.trim();
             if (!email) return;
 
             await db.collection('allowedUsers').doc(email).set({
                 email: email,
+                isAdmin: false,
                 addedAt: firebase.firestore.FieldValue.serverTimestamp(),
                 addedBy: currentUser.email
             });
@@ -808,6 +946,10 @@
         }
 
         async function removeAllowedUser(email) {
+            if (!isCurrentUserAdmin) {
+                alert('管理者のみがユーザーを削除できます');
+                return;
+            }
             if (email === currentUser.email) {
                 alert('自分自身は削除できません');
                 return;
@@ -818,14 +960,45 @@
             }
         }
 
+        async function toggleAdmin(email) {
+            if (!isCurrentUserAdmin) {
+                alert('管理者のみが権限を変更できます');
+                return;
+            }
+            if (email === currentUser.email) {
+                alert('自分自身の権限は変更できません');
+                return;
+            }
+
+            const userData = allowedUsersData.find(u => u.email === email);
+            const newIsAdmin = !userData.isAdmin;
+            const action = newIsAdmin ? '管理者にする' : '管理者から外す';
+
+            if (confirm(`${email} を${action}しますか？`)) {
+                await db.collection('allowedUsers').doc(email).update({
+                    isAdmin: newIsAdmin
+                });
+                await loadAllowedUsers();
+            }
+        }
+
         function renderAllowedUsers() {
             const container = document.getElementById('allowedUsersList');
-            container.innerHTML = allowedUsers.map(email => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8f9fa; margin-bottom: 5px; border-radius: 5px;">
-                    <span>${email}</span>
-                    <button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removeAllowedUser('${email}')">削除</button>
-                </div>
-            `).join('');
+            container.innerHTML = allowedUsersData.map(user => {
+                const isMe = user.email === currentUser?.email;
+                const adminBadge = user.isAdmin ? '<span style="background: #667eea; color: white; padding: 2px 8px; border-radius: 3px; font-size: 11px; margin-left: 8px;">管理者</span>' : '';
+                const adminButton = isCurrentUserAdmin && !isMe ?
+                    `<button class="btn ${user.isAdmin ? 'btn-secondary' : 'btn-success'}" style="padding: 5px 10px; font-size: 12px; margin-right: 5px;" onclick="toggleAdmin('${user.email}')">${user.isAdmin ? '権限解除' : '管理者にする'}</button>` : '';
+                const deleteButton = isCurrentUserAdmin && !isMe ?
+                    `<button class="btn btn-danger" style="padding: 5px 10px; font-size: 12px;" onclick="removeAllowedUser('${user.email}')">削除</button>` : '';
+
+                return `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: ${user.isAdmin ? '#f0f0ff' : '#f8f9fa'}; margin-bottom: 5px; border-radius: 5px; ${isMe ? 'border: 2px solid #667eea;' : ''}">
+                        <span>${user.email}${adminBadge}${isMe ? ' (自分)' : ''}</span>
+                        <div>${adminButton}${deleteButton}</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ============================================
@@ -876,29 +1049,24 @@
         // ============================================
         function renderSamples() {
             const tbody = document.getElementById('sampleTable');
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const filterType = document.getElementById('filterType').value;
-            const filterStock = document.getElementById('filterStock').value;
+            const filtered = getFilteredSamples();
 
-            const filtered = samples.filter(s => {
-                const matchSearch = !searchTerm ||
-                    s.no?.toLowerCase().includes(searchTerm) ||
-                    s.diagnosis?.toLowerCase().includes(searchTerm) ||
-                    s.identifier?.toLowerCase().includes(searchTerm);
+            // 検索結果件数を表示
+            const totalCount = samples.length;
+            const filteredCount = filtered.length;
+            const countDisplay = filteredCount === totalCount
+                ? `全${totalCount}件`
+                : `${filteredCount}件 / ${totalCount}件`;
 
-                const matchType = !filterType || s.sampleType === filterType;
-
-                let matchStock = true;
-                if (filterStock === 'low') {
-                    const remaining = getRemaining(s);
-                    matchStock = remaining.storage <= thresholds.storage || remaining.analysis <= thresholds.analysis;
-                } else if (filterStock === 'empty') {
-                    const remaining = getRemaining(s);
-                    matchStock = remaining.storage <= 0 || remaining.analysis <= 0;
-                }
-
-                return matchSearch && matchType && matchStock;
-            });
+            // 件数表示用の要素があれば更新
+            let countEl = document.getElementById('sampleCount');
+            if (!countEl) {
+                countEl = document.createElement('span');
+                countEl.id = 'sampleCount';
+                countEl.style.cssText = 'margin-left: 10px; color: #666; font-size: 14px;';
+                document.querySelector('#tab-samples .search-box')?.appendChild(countEl);
+            }
+            countEl.textContent = countDisplay;
 
             tbody.innerHTML = filtered.map(s => {
                 const remaining = getRemaining(s);
@@ -1520,19 +1688,73 @@
         // ============================================
         // エクスポート
         // ============================================
+        function getFilteredSamples() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterType = document.getElementById('filterType').value;
+            const filterStock = document.getElementById('filterStock').value;
+            const noFrom = document.getElementById('noFrom').value.trim();
+            const noTo = document.getElementById('noTo').value.trim();
+
+            return samples.filter(s => {
+                const matchSearch = !searchTerm ||
+                    s.no?.toLowerCase().includes(searchTerm) ||
+                    s.diagnosis?.toLowerCase().includes(searchTerm) ||
+                    s.identifier?.toLowerCase().includes(searchTerm);
+
+                const matchType = !filterType || s.sampleType === filterType;
+
+                let matchStock = true;
+                if (filterStock === 'low') {
+                    const remaining = getRemaining(s);
+                    matchStock = remaining.storage <= thresholds.storage || remaining.analysis <= thresholds.analysis;
+                } else if (filterStock === 'empty') {
+                    const remaining = getRemaining(s);
+                    matchStock = remaining.storage <= 0 || remaining.analysis <= 0;
+                }
+
+                // 番号範囲フィルタ
+                let matchRange = true;
+                if (noFrom || noTo) {
+                    const sampleNo = s.no || '';
+                    if (noFrom && noTo) {
+                        matchRange = sampleNo >= noFrom && sampleNo <= noTo;
+                    } else if (noFrom) {
+                        matchRange = sampleNo >= noFrom;
+                    } else if (noTo) {
+                        matchRange = sampleNo <= noTo;
+                    }
+                }
+
+                return matchSearch && matchType && matchStock && matchRange;
+            });
+        }
+
+        function clearRangeFilter() {
+            document.getElementById('noFrom').value = '';
+            document.getElementById('noTo').value = '';
+            filterSamples();
+        }
+
         function exportToCSV() {
-            const headers = ['No', '臨床診断', '年齢', '性別', '識別番号', '検体', '採取日', '保存残量', '解析用残量'];
-            const rows = samples.map(s => {
+            const filteredSamples = getFilteredSamples();
+            const headers = ['No', '臨床診断', '年齢', '性別', '識別番号', '検体', '採取日', '初期保存量', '初期解析用', '保存残量', '解析用残量'];
+            const rows = filteredSamples.map(s => {
                 const remaining = getRemaining(s);
+                const isSerum = s.sampleType === '血清';
+                const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+                const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+                const initial = s.initialStock || {};
                 return [
                     s.no, s.diagnosis, s.age, s.sex, s.identifier,
                     s.sampleType, formatDate(s.collectionDate),
+                    initial[storageKey] || 500, initial[analysisKey] || 200,
                     remaining.storage, remaining.analysis
                 ];
             });
 
             const csv = [headers, ...rows].map(row => row.map(cell => `"${cell || ''}"`).join(',')).join('\n');
-            downloadFile(csv, 'samples.csv', 'text/csv');
+            const filename = filteredSamples.length === samples.length ? 'samples.csv' : 'samples_filtered.csv';
+            downloadFile(csv, filename, 'text/csv');
         }
 
         function exportAllData() {
@@ -1546,8 +1768,11 @@
         }
 
         function exportToExcel() {
+            // フィルタ済みサンプルを取得
+            const filteredSamples = getFilteredSamples();
+
             // サンプルシート用データ
-            const sampleRows = samples.map(s => {
+            const sampleRows = filteredSamples.map(s => {
                 const remaining = getRemaining(s);
                 const isSerum = s.sampleType === '血清';
                 const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
@@ -1595,7 +1820,51 @@
 
             // ダウンロード
             const today = new Date().toISOString().split('T')[0];
-            XLSX.writeFile(wb, `サンプル管理_${today}.xlsx`);
+            const filename = filteredSamples.length === samples.length
+                ? `サンプル管理_${today}.xlsx`
+                : `サンプル管理_検索結果_${today}.xlsx`;
+            XLSX.writeFile(wb, filename);
+        }
+
+        function exportFilteredExcel() {
+            // フィルタ済みサンプルを取得
+            const filteredSamples = getFilteredSamples();
+
+            if (filteredSamples.length === 0) {
+                alert('エクスポートするサンプルがありません');
+                return;
+            }
+
+            // サンプルシート用データ
+            const sampleRows = filteredSamples.map(s => {
+                const remaining = getRemaining(s);
+                const isSerum = s.sampleType === '血清';
+                const storageKey = isSerum ? 'storage_serum' : 'storage_csf';
+                const analysisKey = isSerum ? 'analysis_serum' : 'analysis_csf';
+                const initial = s.initialStock || {};
+                return {
+                    'No': s.no,
+                    '臨床診断': s.diagnosis,
+                    '年齢': s.age,
+                    '性別': s.sex,
+                    '識別番号': s.identifier,
+                    '検体': s.sampleType,
+                    '採取日': formatDate(s.collectionDate),
+                    '初期保存量(μl)': initial[storageKey] || 500,
+                    '初期解析用(μl)': initial[analysisKey] || 200,
+                    '保存残量(μl)': remaining.storage,
+                    '解析用残量(μl)': remaining.analysis
+                };
+            });
+
+            // ワークブック作成
+            const wb = XLSX.utils.book_new();
+            const sampleSheet = XLSX.utils.json_to_sheet(sampleRows);
+            XLSX.utils.book_append_sheet(wb, sampleSheet, '検索結果');
+
+            // ダウンロード
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `検索結果_${filteredSamples.length}件_${today}.xlsx`);
         }
 
         function downloadFile(content, filename, type) {

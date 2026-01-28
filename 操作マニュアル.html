@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>サンプル管理システム 操作マニュアル</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+            line-height: 1.8;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #333;
+            background: #f0f0f0;
+            padding: 10px 15px;
+            border-left: 4px solid #667eea;
+            margin-top: 40px;
+        }
+        h3 {
+            color: #555;
+            margin-top: 25px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+        h4 {
+            color: #667eea;
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background: #667eea;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        pre code {
+            background: none;
+            color: inherit;
+        }
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .note::before {
+            content: "注意: ";
+            font-weight: bold;
+        }
+        .toc {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .toc h2 {
+            margin-top: 0;
+            background: none;
+            border-left: none;
+            padding: 0;
+        }
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 8px 0;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .color-sample {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .color-green { background: #28a745; }
+        .color-orange { background: #fd7e14; }
+        .color-red { background: #dc3545; color: white; text-align: center; line-height: 20px; font-size: 10px; }
+        .btn-sample {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            margin: 2px;
+        }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        ol, ul {
+            padding-left: 25px;
+        }
+        li {
+            margin: 8px 0;
+        }
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .container {
+                box-shadow: none;
+                padding: 20px;
+            }
+            h2 {
+                page-break-after: avoid;
+            }
+            table, pre {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>サンプル管理システム 操作マニュアル</h1>
+
+        <div class="toc">
+            <h2>目次</h2>
+            <ul>
+                <li><a href="#login">1. ログイン方法</a></li>
+                <li><a href="#sample-list">2. サンプル一覧の使い方</a></li>
+                <li><a href="#record-usage">3. 使用を記録する</a></li>
+                <li><a href="#edit-initial">4. 初期量を変更する</a></li>
+                <li><a href="#export">5. データをエクスポートする</a></li>
+                <li><a href="#import">6. データを取り込む（管理者向け）</a></li>
+                <li><a href="#settings">7. 設定（管理者向け）</a></li>
+                <li><a href="#history">8. 使用履歴の確認</a></li>
+                <li><a href="#image">9. 画像の紐付け</a></li>
+                <li><a href="#faq">10. よくある質問</a></li>
+            </ul>
+        </div>
+
+        <h2 id="login">1. ログイン方法</h2>
+
+        <h3>サイトURL</h3>
+        <pre><code>https://sample-manager2026.web.app</code></pre>
+
+        <h3>ログイン方法は2種類</h3>
+
+        <h4>A. Googleアカウントの場合</h4>
+        <ol>
+            <li><span class="btn-sample btn-primary">Googleでログイン</span> ボタンをクリック</li>
+            <li>Googleアカウントを選択</li>
+            <li>ログイン完了</li>
+        </ol>
+
+        <h4>B. その他のメールアドレスの場合</h4>
+
+        <p><strong>初回（新規登録）:</strong></p>
+        <ol>
+            <li>「<strong>新規登録</strong>」リンクをクリック</li>
+            <li>メールアドレスを入力</li>
+            <li>パスワードを入力（6文字以上）</li>
+            <li>パスワード（確認）を再入力</li>
+            <li><span class="btn-sample btn-success">新規登録</span> ボタンをクリック</li>
+        </ol>
+
+        <p><strong>2回目以降:</strong></p>
+        <ol>
+            <li>メールアドレスを入力</li>
+            <li>パスワードを入力</li>
+            <li><span class="btn-sample btn-primary">ログイン</span> ボタンをクリック</li>
+        </ol>
+
+        <div class="note">
+            管理者に事前にメールアドレスを登録してもらう必要があります。
+            登録されていない場合は「アクセスが許可されていません」と表示されます。
+        </div>
+
+        <h2 id="sample-list">2. サンプル一覧の使い方</h2>
+
+        <h3>画面の見方</h3>
+        <table>
+            <tr><th>項目</th><th>説明</th></tr>
+            <tr><td><strong>No</strong></td><td>サンプル番号（クリックで詳細表示）</td></tr>
+            <tr><td><strong>臨床診断</strong></td><td>診断名</td></tr>
+            <tr><td><strong>年齢</strong></td><td>患者年齢</td></tr>
+            <tr><td><strong>性別</strong></td><td>患者性別</td></tr>
+            <tr><td><strong>検体</strong></td><td>血清 または 髄液</td></tr>
+            <tr><td><strong>採取日</strong></td><td>検体採取日</td></tr>
+            <tr><td><strong>初期保存量</strong></td><td>保存用の初期量（クリックで編集可能）</td></tr>
+            <tr><td><strong>初期解析用</strong></td><td>解析用の初期量（クリックで編集可能）</td></tr>
+            <tr><td><strong>残量</strong></td><td>保存/解析用の現在残量</td></tr>
+        </table>
+
+        <h3>残量の色の意味</h3>
+        <table>
+            <tr><th>色</th><th>意味</th></tr>
+            <tr><td><span class="color-sample color-green"></span> 緑</td><td>十分にあり</td></tr>
+            <tr><td><span class="color-sample color-orange"></span> オレンジ</td><td>残量少（設定した閾値以下）</td></tr>
+            <tr><td><span class="color-sample color-red">なし</span> 赤背景</td><td>残量なし（0）</td></tr>
+        </table>
+
+        <h3>検索・フィルタ</h3>
+
+        <h4>キーワード検索</h4>
+        <ul>
+            <li>検索ボックスにNo、診断名、識別番号などを入力</li>
+            <li>入力するとリアルタイムで絞り込み</li>
+        </ul>
+
+        <h4>検体で絞り込み</h4>
+        <ul>
+            <li>「すべての検体」「血清のみ」「髄液のみ」から選択</li>
+        </ul>
+
+        <h4>残量で絞り込み</h4>
+        <ul>
+            <li>「すべての残量」「残量少」「残量なし」から選択</li>
+        </ul>
+
+        <h4>番号範囲で絞り込み</h4>
+        <ol>
+            <li>「開始」に最初の番号を入力（例: <code>190001</code>）</li>
+            <li>「終了」に最後の番号を入力（例: <code>190100</code>）</li>
+            <li>自動的にその範囲のサンプルのみ表示</li>
+            <li>「クリア」で範囲指定を解除</li>
+        </ol>
+
+        <h3>統計カード</h3>
+        <p>画面上部のカードをクリックすると、該当するサンプルが絞り込まれます：</p>
+        <ul>
+            <li><strong>総サンプル数</strong>: 全件表示</li>
+            <li><strong>血清サンプル</strong>: 血清のみ表示</li>
+            <li><strong>髄液サンプル</strong>: 髄液のみ表示</li>
+            <li><strong>残量少</strong>: 残量が少ないサンプルのみ表示</li>
+            <li><strong>残量なし</strong>: 残量がないサンプルのみ表示</li>
+        </ul>
+
+        <h2 id="record-usage">3. 使用を記録する</h2>
+
+        <h3>手順</h3>
+        <ol>
+            <li>サンプル一覧で該当サンプルの <span class="btn-sample btn-primary">使用</span> ボタンをクリック</li>
+            <li>以下を入力：</li>
+        </ol>
+
+        <table>
+            <tr><th>項目</th><th>説明</th></tr>
+            <tr><td><strong>検体・区分</strong></td><td>保存血清/解析用血清/保存髄液/解析用髄液 から選択</td></tr>
+            <tr><td><strong>使用量</strong></td><td>使用したμl数を入力</td></tr>
+            <tr><td><strong>用途</strong></td><td>例: BioPlex測定、ELISA など</td></tr>
+            <tr><td><strong>日付</strong></td><td>使用した日付（デフォルトは今日）</td></tr>
+        </table>
+
+        <ol start="3">
+            <li><span class="btn-sample btn-primary">記録する</span> ボタンをクリック</li>
+            <li>残量が自動で再計算されます</li>
+        </ol>
+
+        <div class="note">
+            残量を超える使用量は入力できません。
+        </div>
+
+        <h2 id="edit-initial">4. 初期量を変更する</h2>
+
+        <h3>方法1: 一覧から直接編集（推奨）</h3>
+        <ol>
+            <li>サンプル一覧の「<strong>初期保存量</strong>」または「<strong>初期解析用</strong>」のセルをクリック</li>
+            <li>数値を入力</li>
+            <li><strong>Enter</strong>キー または セル外をクリックで保存</li>
+            <li><strong>Esc</strong>キー でキャンセル</li>
+        </ol>
+
+        <h2 id="export">5. データをエクスポートする</h2>
+
+        <h3>検索結果をExcelで出力</h3>
+        <ol>
+            <li>検索やフィルタでサンプルを絞り込む</li>
+            <li><span class="btn-sample btn-success">検索結果をExcel出力</span> ボタンをクリック</li>
+            <li><code>検索結果_○件_日付.xlsx</code> がダウンロードされます</li>
+        </ol>
+
+        <p><strong>出力される項目:</strong></p>
+        <ul>
+            <li>No、臨床診断、年齢、性別、識別番号</li>
+            <li>検体、採取日</li>
+            <li>初期保存量、初期解析用</li>
+            <li>保存残量、解析用残量</li>
+        </ul>
+
+        <h3>全データバックアップ（管理者向け）</h3>
+        <ol>
+            <li>「<strong>設定</strong>」タブを開く</li>
+            <li>「データ管理」セクションで：
+                <ul>
+                    <li><span class="btn-sample btn-success">Excelでバックアップ</span>: サンプル一覧＋使用履歴</li>
+                    <li><span class="btn-sample btn-secondary">JSONでバックアップ</span>: 全データ（復元用）</li>
+                </ul>
+            </li>
+        </ol>
+
+        <h2 id="import">6. データを取り込む（管理者向け）</h2>
+
+        <h3>Excelファイルからインポート</h3>
+        <ol>
+            <li>「<strong>データ取込</strong>」タブを開く</li>
+            <li>Excelファイル（.xlsx）をドラッグ＆ドロップ、または「ファイルを選択」</li>
+            <li>プレビューで内容を確認</li>
+            <li><span class="btn-sample btn-success">インポート実行</span> をクリック</li>
+        </ol>
+
+        <p><strong>対応フォーマット:</strong></p>
+        <ul>
+            <li>都医学研 sample list のExcelファイル</li>
+            <li>「Sample」シートからデータを読み込み</li>
+        </ul>
+
+        <div class="note">
+            既に同じNoと検体の組み合わせが存在する場合はスキップされます。
+        </div>
+
+        <h2 id="settings">7. 設定（管理者向け）</h2>
+
+        <h3>残量アラート設定</h3>
+        <p>残量が少ないと判定する閾値を設定します。</p>
+        <ol>
+            <li>「<strong>設定</strong>」タブを開く</li>
+            <li>「残量アラート設定」セクションで：
+                <ul>
+                    <li><strong>保存用</strong>: 保存血清/髄液の閾値（μl）</li>
+                    <li><strong>解析用</strong>: 解析用血清/髄液の閾値（μl）</li>
+                </ul>
+            </li>
+            <li><span class="btn-sample btn-primary">閾値を保存</span> をクリック</li>
+        </ol>
+        <p>設定は全ユーザーに共有されます。</p>
+
+        <h3>許可ユーザー管理</h3>
+        <p>アクセスを許可するユーザーを管理します。</p>
+
+        <h4>ユーザーを追加</h4>
+        <ol>
+            <li>「<strong>設定</strong>」タブを開く</li>
+            <li>「許可ユーザー管理」セクション</li>
+            <li>メールアドレスを入力</li>
+            <li><span class="btn-sample btn-primary">追加</span> をクリック</li>
+        </ol>
+
+        <h4>ユーザーを削除</h4>
+        <ol>
+            <li>ユーザー一覧で該当ユーザーの <span class="btn-sample" style="background:#dc3545;color:white;">削除</span> をクリック</li>
+        </ol>
+
+        <div class="note">
+            自分自身は削除できません。
+        </div>
+
+        <h2 id="history">8. 使用履歴の確認</h2>
+        <ol>
+            <li>「<strong>使用履歴</strong>」タブを開く</li>
+            <li>日付範囲やサンプルNoで絞り込み可能</li>
+            <li>誰がいつ、どれだけ使用したかを確認できます</li>
+        </ol>
+
+        <table>
+            <tr><th>項目</th><th>説明</th></tr>
+            <tr><td><strong>日時</strong></td><td>使用日</td></tr>
+            <tr><td><strong>サンプルNo</strong></td><td>クリックで詳細表示</td></tr>
+            <tr><td><strong>検体種類</strong></td><td>血清/髄液</td></tr>
+            <tr><td><strong>区分</strong></td><td>保存/解析用</td></tr>
+            <tr><td><strong>使用量</strong></td><td>使用したμl数</td></tr>
+            <tr><td><strong>用途</strong></td><td>記録した用途</td></tr>
+            <tr><td><strong>使用者</strong></td><td>記録したユーザー</td></tr>
+            <tr><td><strong>残量</strong></td><td>使用後の残量</td></tr>
+        </table>
+
+        <h2 id="image">9. 画像の紐付け</h2>
+        <p>紙のアンケート用紙の写真などをサンプルに紐付けできます。</p>
+
+        <h3>画像を追加</h3>
+        <ol>
+            <li>サンプルのNoをクリックして詳細画面を開く</li>
+            <li><span class="btn-sample btn-secondary">画像を追加</span> ボタンをクリック</li>
+            <li>画像ファイルを選択</li>
+            <li><span class="btn-sample btn-primary">アップロード</span> をクリック</li>
+        </ol>
+
+        <h3>画像を確認</h3>
+        <ul>
+            <li>サンプル詳細画面にサムネイルが表示されます</li>
+            <li>クリックで拡大表示</li>
+        </ul>
+
+        <h2 id="faq">10. よくある質問</h2>
+
+        <h3>Q. ログインできません</h3>
+        <p><strong>A.</strong> 管理者にメールアドレスの登録を依頼してください。</p>
+
+        <h3>Q. 使用を記録できません</h3>
+        <p><strong>A.</strong> 残量を超える使用量を入力していないか確認してください。</p>
+
+        <h3>Q. 画面が更新されません</h3>
+        <p><strong>A.</strong> ブラウザをリロード（Cmd+R または Ctrl+R）してください。</p>
+
+        <h3>Q. 初期量を間違えて入力しました</h3>
+        <p><strong>A.</strong> 一覧の初期量セルをクリックして修正できます。</p>
+
+        <h3>Q. 使用履歴を削除したい</h3>
+        <p><strong>A.</strong> 現在、履歴の削除機能はありません。管理者にお問い合わせください。</p>
+
+        <hr style="margin-top: 40px;">
+        <p style="text-align: center; color: #999; font-size: 14px;">
+            サンプル管理システム 操作マニュアル<br>
+            最終更新: 2026年1月
+        </p>
+    </div>
+</body>
+</html>
