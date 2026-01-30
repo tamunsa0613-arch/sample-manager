@@ -395,6 +395,69 @@
         .hidden {
             display: none;
         }
+        .memo-cell {
+            max-width: 150px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .memo-cell.has-memo {
+            background: #fff3cd;
+        }
+        .memo-cell textarea {
+            width: 150px;
+            min-height: 60px;
+            padding: 5px;
+            border: 1px solid #667eea;
+            border-radius: 3px;
+            font-size: 12px;
+            resize: vertical;
+        }
+        .help-content {
+            line-height: 1.8;
+        }
+        .help-content h3 {
+            color: #667eea;
+            border-left: 4px solid #667eea;
+            padding-left: 10px;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        .help-content h4 {
+            color: #555;
+            margin-top: 15px;
+        }
+        .help-content table {
+            margin: 15px 0;
+        }
+        .help-content .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 10px 15px;
+            margin: 15px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        .help-content .note::before {
+            content: "注意: ";
+            font-weight: bold;
+        }
+        .help-content ol, .help-content ul {
+            padding-left: 25px;
+        }
+        .help-content li {
+            margin: 5px 0;
+        }
+        .color-sample {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+            vertical-align: middle;
+            margin-right: 5px;
+        }
+        .color-green { background: #28a745; }
+        .color-orange { background: #fd7e14; }
+        .color-red { background: #dc3545; }
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
@@ -458,6 +521,9 @@
     <div class="app-container" id="appContainer">
         <div class="header">
             <h1>サンプル管理システム</h1>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <a href="freezer-map.html" style="color: white; text-decoration: none; background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 5px;">冷凍庫マップ</a>
+            </div>
             <div class="user-info">
                 <img id="userPhoto" src="" alt="">
                 <span id="userName"></span>
@@ -496,6 +562,7 @@
                 <button class="tab-btn" onclick="showTab('usage')">使用履歴</button>
                 <button class="tab-btn" onclick="showTab('import')">データ取込</button>
                 <button class="tab-btn" onclick="showTab('settings')">設定</button>
+                <button class="tab-btn" onclick="showTab('help')">使い方</button>
             </div>
 
             <!-- サンプル一覧 -->
@@ -534,6 +601,7 @@
                                 <th>初期保存量</th>
                                 <th>初期解析用</th>
                                 <th>残量</th>
+                                <th>メモ</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -639,6 +707,85 @@
                     <button class="btn btn-success" onclick="exportToExcel()">Excelでバックアップ</button>
                     <button class="btn btn-secondary" onclick="exportAllData()" style="margin-left: 10px;">JSONでバックアップ</button>
                     <button class="btn btn-danger admin-only" onclick="confirmDeleteAll()" style="margin-left: 10px;">全データ削除</button>
+                </div>
+            </div>
+
+            <!-- 使い方 -->
+            <div class="tab-content" id="tab-help">
+                <div class="help-content">
+                    <h3>サンプル一覧の使い方</h3>
+                    <table>
+                        <tr><th>項目</th><th>説明</th></tr>
+                        <tr><td><strong>No</strong></td><td>サンプル番号（クリックで詳細表示）</td></tr>
+                        <tr><td><strong>臨床診断</strong></td><td>診断名</td></tr>
+                        <tr><td><strong>年齢・性別</strong></td><td>患者情報</td></tr>
+                        <tr><td><strong>検体</strong></td><td>血清 または 髄液</td></tr>
+                        <tr><td><strong>初期保存量/解析用</strong></td><td>クリックして編集可能</td></tr>
+                        <tr><td><strong>残量</strong></td><td>保存/解析用の現在残量</td></tr>
+                        <tr><td><strong>メモ</strong></td><td>クリックして編集可能（保存場所など）</td></tr>
+                    </table>
+
+                    <h4>残量の色の意味</h4>
+                    <table>
+                        <tr><th>色</th><th>意味</th></tr>
+                        <tr><td><span class="color-sample color-green"></span> 緑</td><td>十分にあり</td></tr>
+                        <tr><td><span class="color-sample color-orange"></span> オレンジ</td><td>残量少（設定した閾値以下）</td></tr>
+                        <tr><td><span class="color-sample color-red" style="color:white;text-align:center;line-height:16px;font-size:10px;">なし</span></td><td>残量なし（0）</td></tr>
+                    </table>
+
+                    <h4>メモ欄の活用例</h4>
+                    <div class="note" style="background:#e8f4fd;border-left-color:#667eea;">
+                        <strong style="color:#667eea;">ポイント:</strong> 再発時など古い番号の検体が後から追加された場合、保存場所をメモに記録しておくと探しやすくなります。<br>
+                        例：「Box5-A3の後ろに保存」「250050の隣」など
+                    </div>
+
+                    <h3>検索・フィルタ</h3>
+                    <ul>
+                        <li><strong>キーワード検索:</strong> No、診断名、識別番号などで検索</li>
+                        <li><strong>検体で絞り込み:</strong> 血清のみ / 髄液のみ</li>
+                        <li><strong>残量で絞り込み:</strong> 残量少 / 残量なし</li>
+                        <li><strong>番号範囲:</strong> 開始〜終了の範囲で絞り込み</li>
+                    </ul>
+
+                    <h3>使用を記録する</h3>
+                    <ol>
+                        <li>サンプル一覧で「使用」ボタンをクリック</li>
+                        <li>検体・区分（保存/解析用）を選択</li>
+                        <li>使用量（μl）を入力</li>
+                        <li>用途（例: BioPlex測定）を入力</li>
+                        <li>「記録する」をクリック</li>
+                    </ol>
+                    <div class="note">残量を超える使用量は入力できません。</div>
+
+                    <h3>初期量・メモを変更する</h3>
+                    <ol>
+                        <li>一覧の「初期保存量」「初期解析用」「メモ」セルを直接クリック</li>
+                        <li>数値またはテキストを入力</li>
+                        <li>Enterキー または セル外クリックで保存</li>
+                        <li>Escキーでキャンセル</li>
+                    </ol>
+
+                    <h3>データをエクスポート</h3>
+                    <ul>
+                        <li><strong>検索結果をExcel出力:</strong> 検索・フィルタした結果をExcelでダウンロード</li>
+                        <li><strong>Excelでバックアップ:</strong> 全サンプル＋使用履歴をExcelでダウンロード（設定タブ）</li>
+                    </ul>
+
+                    <h3>よくある質問</h3>
+                    <h4>Q. 古い番号の検体が見つかりません</h4>
+                    <p><strong>A.</strong> 検索ボックスに番号を入力するか、メモ欄に保存場所を記録しておくと便利です。</p>
+
+                    <h4>Q. 使用を記録できません</h4>
+                    <p><strong>A.</strong> 残量を超える使用量を入力していないか確認してください。</p>
+
+                    <h4>Q. 初期量を間違えて入力しました</h4>
+                    <p><strong>A.</strong> 一覧の初期量セルをクリックして修正できます。</p>
+
+                    <hr style="margin-top: 30px;">
+                    <p style="text-align: center; color: #999; font-size: 12px;">
+                        サンプル管理システム v1.1<br>
+                        最終更新: 2026年1月
+                    </p>
                 </div>
             </div>
         </div>
@@ -1078,6 +1225,9 @@
                 const storageInitial = initial[storageKey] || 500;
                 const analysisInitial = initial[analysisKey] || 200;
 
+                const memoDisplay = s.memo ? (s.memo.length > 15 ? s.memo.substring(0, 15) + '...' : s.memo) : '';
+                const memoClass = s.memo ? 'has-memo' : '';
+
                 return `
                     <tr>
                         <td class="clickable" onclick="showSampleDetail('${s.id}')">${s.no || ''}</td>
@@ -1089,6 +1239,7 @@
                         <td class="editable-cell" onclick="editInitialStock('${s.id}', 'storage', ${storageInitial}, this)">${storageInitial}μl</td>
                         <td class="editable-cell" onclick="editInitialStock('${s.id}', 'analysis', ${analysisInitial}, this)">${analysisInitial}μl</td>
                         <td>${formatRemaining(remaining.storage, 'storage')} / ${formatRemaining(remaining.analysis, 'analysis')}</td>
+                        <td class="editable-cell memo-cell ${memoClass}" onclick="editMemo('${s.id}', this)" title="${s.memo || 'クリックしてメモを追加'}">${memoDisplay || '<span style="color:#999;font-size:11px;">+メモ</span>'}</td>
                         <td>
                             <button class="btn" style="padding: 5px 10px; font-size: 12px;" onclick="openUsageModal('${s.id}')">使用</button>
                         </td>
@@ -1190,6 +1341,12 @@
                     <tr><th>採取日</th><td>${formatDate(sample.collectionDate)}</td></tr>
                 </table>
 
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: 600; display: block; margin-bottom: 5px;">メモ（保存場所など）</label>
+                    <textarea id="detailMemo" style="width: 100%; min-height: 60px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;" placeholder="例: Box5-A3の後ろに保存、250050の隣 など">${sample.memo || ''}</textarea>
+                    <button class="btn" style="margin-top: 5px;" onclick="saveDetailMemo('${sampleId}')">メモを保存</button>
+                </div>
+
                 ${imagesHtml}
 
                 <div style="margin-top: 20px;">
@@ -1270,6 +1427,67 @@
             document.getElementById('remainingHint').textContent = `残量: ${max}μl`;
         }
 
+        // メモ編集機能
+        function editMemo(sampleId, cell) {
+            // 既に編集中なら何もしない
+            if (cell.querySelector('textarea')) return;
+
+            const sample = samples.find(s => s.id === sampleId);
+            const currentMemo = sample?.memo || '';
+
+            const textarea = document.createElement('textarea');
+            textarea.value = currentMemo;
+            textarea.placeholder = '保存場所などをメモ...';
+
+            const originalContent = cell.innerHTML;
+            cell.innerHTML = '';
+            cell.appendChild(textarea);
+            textarea.focus();
+
+            let handled = false;
+            const save = async () => {
+                if (handled) return;
+                handled = true;
+                textarea.removeEventListener('blur', save);
+                const newMemo = textarea.value.trim();
+                if (newMemo !== currentMemo) {
+                    await db.collection('samples').doc(sampleId).update({
+                        memo: newMemo
+                    });
+                    await loadData();
+                } else {
+                    cell.innerHTML = originalContent;
+                }
+            };
+
+            const cancel = () => {
+                if (handled) return;
+                handled = true;
+                textarea.removeEventListener('blur', save);
+                cell.innerHTML = originalContent;
+            };
+
+            textarea.addEventListener('blur', save);
+            textarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    save();
+                } else if (e.key === 'Escape') {
+                    cancel();
+                }
+            });
+        }
+
+        // 詳細画面からメモを保存
+        async function saveDetailMemo(sampleId) {
+            const memo = document.getElementById('detailMemo').value.trim();
+            await db.collection('samples').doc(sampleId).update({
+                memo: memo
+            });
+            await loadData();
+            alert('メモを保存しました');
+        }
+
         // インライン編集機能
         function editInitialStock(sampleId, type, currentValue, cell) {
             // 既に編集中なら何もしない
@@ -1287,7 +1505,11 @@
             input.focus();
             input.select();
 
+            let handled = false;
             const save = async () => {
+                if (handled) return;
+                handled = true;
+                input.removeEventListener('blur', save);
                 const newValue = parseInt(input.value) || 0;
                 if (newValue !== currentValue) {
                     const sample = samples.find(s => s.id === sampleId);
@@ -1309,13 +1531,20 @@
                 }
             };
 
+            const cancel = () => {
+                if (handled) return;
+                handled = true;
+                input.removeEventListener('blur', save);
+                cell.innerHTML = originalContent;
+            };
+
             input.addEventListener('blur', save);
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    input.blur();
+                    save();
                 } else if (e.key === 'Escape') {
-                    cell.innerHTML = originalContent;
+                    cancel();
                 }
             });
         }
@@ -1653,6 +1882,7 @@
                         storage_csf: 500,
                         analysis_csf: 200
                     },
+                    memo: '',
                     images: [],
                     createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     createdBy: currentUser.email
@@ -1789,7 +2019,8 @@
                     '初期保存量(μl)': initial[storageKey] || 500,
                     '初期解析用(μl)': initial[analysisKey] || 200,
                     '保存残量(μl)': remaining.storage,
-                    '解析用残量(μl)': remaining.analysis
+                    '解析用残量(μl)': remaining.analysis,
+                    'メモ': s.memo || ''
                 };
             });
 
@@ -1853,7 +2084,8 @@
                     '初期保存量(μl)': initial[storageKey] || 500,
                     '初期解析用(μl)': initial[analysisKey] || 200,
                     '保存残量(μl)': remaining.storage,
-                    '解析用残量(μl)': remaining.analysis
+                    '解析用残量(μl)': remaining.analysis,
+                    'メモ': s.memo || ''
                 };
             });
 

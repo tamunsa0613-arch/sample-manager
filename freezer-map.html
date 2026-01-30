@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>冷凍庫マップ - サンプル管理システム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            min-height: 100vh;
+        }
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        .login-box h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .google-btn:hover {
+            background: #357abd;
+        }
+        .app-container {
+            display: none;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .header h1 {
+            font-size: 20px;
+        }
+        .header-links a {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+        }
+        .header-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .main-content {
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: #5a6fd6;
+        }
+        .btn-success { background: #28a745; }
+        .btn-danger { background: #dc3545; }
+        .btn-secondary { background: #6c757d; }
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+        .search-box {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 200px;
+        }
+        .freezers-container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .freezer {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .freezer-header {
+            padding: 15px 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .freezer-80 .freezer-header {
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 100%);
+        }
+        .freezer-20 .freezer-header {
+            background: linear-gradient(135deg, #0d47a1 0%, #42a5f5 100%);
+        }
+        .freezer-body {
+            padding: 20px;
+        }
+        .shelf {
+            margin-bottom: 20px;
+        }
+        .shelf-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .shelf-grid {
+            display: grid;
+            gap: 8px;
+            background: #e8eaf6;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid #c5cae9;
+        }
+        .freezer-80 .shelf-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        .freezer-20 .shelf-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .slot {
+            min-width: 80px;
+            min-height: 80px;
+            background: #fff;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+            color: #333;
+            position: relative;
+        }
+        .slot:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .slot.has-boxes {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border-color: #fbc02d;
+        }
+        .slot.drag-over {
+            border-color: #28a745;
+            background: #e8f5e9;
+        }
+        .slot.highlight {
+            box-shadow: 0 0 0 3px #667eea;
+        }
+        .slot-header {
+            font-size: 10px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+        .slot-count {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        .slot-label {
+            font-size: 9px;
+            color: #666;
+        }
+        .slot-empty {
+            color: #ccc;
+            font-size: 20px;
+            text-align: center;
+            padding: 15px 0;
+        }
+        .unassigned-boxes {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .unassigned-boxes h4 {
+            margin-bottom: 10px;
+            color: #856404;
+        }
+        .unassigned-box {
+            display: inline-block;
+            background: #ffc107;
+            color: #333;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: move;
+            font-size: 13px;
+        }
+        .unassigned-box:hover {
+            background: #e0a800;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .box-in-slot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 8px;
+        }
+        .box-in-slot:hover {
+            background: #e9ecef;
+        }
+        .box-in-slot .box-name {
+            font-weight: 500;
+        }
+        .box-in-slot .box-year {
+            font-size: 12px;
+            color: #666;
+        }
+        .box-list {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .box-list h3 {
+            margin-bottom: 15px;
+        }
+        .box-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .box-list-item:last-child {
+            border-bottom: none;
+        }
+        .box-location {
+            font-size: 12px;
+            color: #666;
+        }
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+        }
+        .legend-empty {
+            background: #fff;
+            border: 2px solid #ddd;
+        }
+        .legend-has {
+            background: linear-gradient(135deg, #fff9c4 0%, #fff59d 100%);
+            border: 2px solid #fbc02d;
+        }
+        @media (max-width: 768px) {
+            .freezers-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .slot {
+                min-width: 65px;
+                min-height: 65px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ログイン画面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h1>冷凍庫マップ</h1>
+            <p style="margin-bottom: 20px; color: #666;">サンプル保存場所管理</p>
+            <button class="google-btn" onclick="signInWithGoogle()">
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                    <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                    <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z" fill="#34A853"/>
+                    <path d="M3.964 10.71A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                    <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                </svg>
+                Googleでログイン
+            </button>
+            <p id="loginError" style="color: #dc3545; margin-top: 15px; display: none;"></p>
+        </div>
+    </div>
+
+    <!-- メインアプリ -->
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <h1>冷凍庫マップ</h1>
+            <div class="header-links">
+                <a href="index.html">← サンプル管理に戻る</a>
+            </div>
+            <div class="user-info">
+                <span id="userName"></span>
+                <button class="logout-btn" onclick="signOut()">ログアウト</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="controls">
+                <button class="btn btn-success" onclick="openAddBoxModal()">+ 新規ボックス登録</button>
+                <input type="text" class="search-box" id="searchBox" placeholder="ボックス名で検索..." oninput="searchBox()">
+                <button class="btn" onclick="exportToExcel()">Excelエクスポート</button>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box legend-empty"></div>
+                    <span>空（クリックで追加）</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box legend-has"></div>
+                    <span>ボックスあり（クリックで詳細）</span>
+                </div>
+                <div class="legend-item">
+                    <span style="color: #666;">※各スロット最大12個</span>
+                </div>
+            </div>
+
+            <!-- 未配置ボックス -->
+            <div class="unassigned-boxes" id="unassignedBoxes" style="display: none;">
+                <h4>未配置のボックス（ドラッグしてスロットに配置）</h4>
+                <div id="unassignedList"></div>
+            </div>
+
+            <!-- 冷凍庫表示 -->
+            <div class="freezers-container">
+                <!-- -80度冷凍庫 -->
+                <div class="freezer freezer-80">
+                    <div class="freezer-header">
+                        <span>-80°C 冷凍庫</span>
+                        <span style="font-size: 12px; opacity: 0.8;">4×2 × 4段</span>
+                    </div>
+                    <div class="freezer-body" id="freezer80"></div>
+                </div>
+
+                <!-- -20度冷凍庫 -->
+                <div class="freezer freezer-20">
+                    <div class="freezer-header">
+                        <span>-20°C 冷凍庫</span>
+                        <span style="font-size: 12px; opacity: 0.8;">2×1 × 7段</span>
+                    </div>
+                    <div class="freezer-body" id="freezer20"></div>
+                </div>
+            </div>
+
+            <!-- ボックス一覧 -->
+            <div class="box-list">
+                <h3>登録済みボックス一覧</h3>
+                <div id="boxListContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ボックス追加モーダル -->
+    <div class="modal" id="addBoxModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>新規ボックス登録</h2>
+                <button class="modal-close" onclick="closeModal('addBoxModal')">&times;</button>
+            </div>
+            <form onsubmit="addBox(event)">
+                <div class="form-group">
+                    <label>ボックス名 *</label>
+                    <input type="text" id="boxName" placeholder="例: 2024年Box1" required>
+                </div>
+                <div class="form-group">
+                    <label>年度</label>
+                    <input type="text" id="boxYear" placeholder="例: 2024">
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <input type="text" id="boxMemo" placeholder="例: 血清サンプル">
+                </div>
+                <button type="submit" class="btn" style="width: 100%;">登録</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- スロット詳細モーダル -->
+    <div class="modal" id="slotModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="slotModalTitle">スロット詳細</h2>
+                <button class="modal-close" onclick="closeModal('slotModal')">&times;</button>
+            </div>
+            <div id="slotModalContent"></div>
+        </div>
+    </div>
+
+    <!-- ボックス詳細モーダル -->
+    <div class="modal" id="boxDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>ボックス詳細</h2>
+                <button class="modal-close" onclick="closeModal('boxDetailModal')">&times;</button>
+            </div>
+            <div id="boxDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase設定
+        const firebaseConfig = {
+            apiKey: "AIzaSyBMlMvaCxUej-X8FmbWTC4n9kBOCIPcrVA",
+            authDomain: "sample-manager2026.firebaseapp.com",
+            projectId: "sample-manager2026",
+            storageBucket: "sample-manager2026.firebasestorage.app",
+            messagingSenderId: "596999127791",
+            appId: "1:596999127791:web:bcfbe6a124542d9d0ed11a"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+        let boxes = [];
+        let allowedUsers = [];
+        let draggedBox = null;
+
+        // 冷凍庫の構成
+        const FREEZER_CONFIG = {
+            '-80': { shelves: 4, cols: 4, rows: 2, maxPerSlot: 12 },
+            '-20': { shelves: 7, cols: 2, rows: 1, maxPerSlot: 12 }
+        };
+
+        // 認証
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await loadAllowedUsers();
+                if (allowedUsers.includes(user.email)) {
+                    currentUser = user;
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('appContainer').style.display = 'block';
+                    document.getElementById('userName').textContent = user.displayName || user.email;
+                    loadData();
+                } else {
+                    auth.signOut();
+                    document.getElementById('loginError').textContent = 'アクセスが許可されていません';
+                    document.getElementById('loginError').style.display = 'block';
+                }
+            } else {
+                document.getElementById('loginContainer').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+            }
+        });
+
+        function signInWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch((error) => {
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').style.display = 'block';
+            });
+        }
+
+        function signOut() {
+            auth.signOut();
+        }
+
+        async function loadAllowedUsers() {
+            const snapshot = await db.collection('allowedUsers').get();
+            allowedUsers = snapshot.docs.map(doc => doc.data().email);
+        }
+
+        // データ読み込み
+        async function loadData() {
+            const snapshot = await db.collection('freezerBoxes').orderBy('name').get();
+            boxes = snapshot.docs.map(doc => {
+                const data = doc.data();
+                // 旧データ形式との互換性（position → slot）
+                if (data.position && !data.slot) {
+                    data.slot = data.position;
+                }
+                return { id: doc.id, ...data };
+            });
+            renderFreezers();
+            renderBoxList();
+            renderUnassignedBoxes();
+        }
+
+        // 冷凍庫を描画
+        function renderFreezers() {
+            renderFreezer('-80', 'freezer80');
+            renderFreezer('-20', 'freezer20');
+        }
+
+        function renderFreezer(type, containerId) {
+            const config = FREEZER_CONFIG[type];
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            for (let shelf = 1; shelf <= config.shelves; shelf++) {
+                const shelfDiv = document.createElement('div');
+                shelfDiv.className = 'shelf';
+
+                const label = document.createElement('div');
+                label.className = 'shelf-label';
+                label.textContent = `${shelf}段目`;
+                shelfDiv.appendChild(label);
+
+                const grid = document.createElement('div');
+                grid.className = 'shelf-grid';
+
+                const slotsPerShelf = config.cols * config.rows;
+                for (let slotNum = 1; slotNum <= slotsPerShelf; slotNum++) {
+                    const slot = createSlot(type, shelf, slotNum, config);
+                    grid.appendChild(slot);
+                }
+
+                shelfDiv.appendChild(grid);
+                container.appendChild(shelfDiv);
+            }
+        }
+
+        function createSlot(freezerType, shelf, slotNum, config) {
+            const slot = document.createElement('div');
+            slot.className = 'slot';
+            slot.dataset.freezerType = freezerType;
+            slot.dataset.shelf = shelf;
+            slot.dataset.slot = slotNum;
+
+            // このスロットにあるボックスを取得
+            const slotBoxes = boxes.filter(b =>
+                b.freezerType === freezerType &&
+                b.shelf === shelf &&
+                b.slot === slotNum
+            );
+
+            const count = slotBoxes.length;
+            const isFull = count >= config.maxPerSlot;
+
+            if (count > 0) {
+                slot.classList.add('has-boxes');
+                slot.innerHTML = `
+                    <div class="slot-header">${slotNum}</div>
+                    <div class="slot-count">${count}</div>
+                    <div class="slot-label">個</div>
+                `;
+            } else {
+                slot.innerHTML = `
+                    <div class="slot-header">${slotNum}</div>
+                    <div class="slot-empty">+</div>
+                `;
+            }
+
+            slot.onclick = () => openSlotModal(freezerType, shelf, slotNum);
+
+            // ドロップイベント
+            slot.ondragover = (e) => {
+                e.preventDefault();
+                if (draggedBox && !isFull) {
+                    slot.classList.add('drag-over');
+                }
+            };
+            slot.ondragleave = () => {
+                slot.classList.remove('drag-over');
+            };
+            slot.ondrop = async (e) => {
+                e.preventDefault();
+                slot.classList.remove('drag-over');
+                if (draggedBox && !isFull) {
+                    await moveBoxToSlot(draggedBox.id, freezerType, shelf, slotNum);
+                }
+            };
+
+            return slot;
+        }
+
+        // スロットモーダル
+        function openSlotModal(freezerType, shelf, slotNum) {
+            const config = FREEZER_CONFIG[freezerType];
+            const slotBoxes = boxes.filter(b =>
+                b.freezerType === freezerType &&
+                b.shelf === shelf &&
+                b.slot === slotNum
+            );
+
+            document.getElementById('slotModalTitle').textContent =
+                `${freezerType}°C / ${shelf}段目 / スロット${slotNum}`;
+
+            let html = `<p style="margin-bottom: 15px; color: #666;">登録数: ${slotBoxes.length} / ${config.maxPerSlot}</p>`;
+
+            if (slotBoxes.length > 0) {
+                html += '<div style="margin-bottom: 20px;">';
+                slotBoxes.forEach(box => {
+                    html += `
+                        <div class="box-in-slot">
+                            <div>
+                                <div class="box-name">${box.name}</div>
+                                ${box.year ? `<div class="box-year">${box.year}年</div>` : ''}
+                            </div>
+                            <div>
+                                <button class="btn btn-secondary btn-sm" onclick="showBoxDetail('${box.id}')">詳細</button>
+                                <button class="btn btn-danger btn-sm" onclick="removeFromSlot('${box.id}')" style="margin-left: 5px;">取出</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+            } else {
+                html += '<p style="color: #999; margin-bottom: 20px;">このスロットは空です</p>';
+            }
+
+            // 追加ボタン
+            if (slotBoxes.length < config.maxPerSlot) {
+                const unassigned = boxes.filter(b => !b.freezerType || !b.shelf);
+                if (unassigned.length > 0) {
+                    html += `
+                        <div class="form-group">
+                            <label>ボックスを追加</label>
+                            <select id="addBoxSelect" style="margin-bottom: 10px;">
+                                <option value="">選択してください</option>
+                                ${unassigned.map(b => `<option value="${b.id}">${b.name}${b.year ? ' (' + b.year + ')' : ''}</option>`).join('')}
+                            </select>
+                            <button class="btn" onclick="addSelectedBoxToSlot('${freezerType}', ${shelf}, ${slotNum})">追加</button>
+                        </div>
+                    `;
+                } else {
+                    html += `<button class="btn btn-success" onclick="closeModal('slotModal'); openAddBoxModal();">新規ボックスを登録</button>`;
+                }
+            }
+
+            document.getElementById('slotModalContent').innerHTML = html;
+            document.getElementById('slotModal').classList.add('active');
+        }
+
+        async function addSelectedBoxToSlot(freezerType, shelf, slotNum) {
+            const boxId = document.getElementById('addBoxSelect').value;
+            if (!boxId) {
+                alert('ボックスを選択してください');
+                return;
+            }
+            await moveBoxToSlot(boxId, freezerType, shelf, slotNum);
+            openSlotModal(freezerType, shelf, slotNum); // モーダルを更新
+        }
+
+        async function moveBoxToSlot(boxId, freezerType, shelf, slotNum) {
+            await db.collection('freezerBoxes').doc(boxId).update({
+                freezerType: freezerType,
+                shelf: shelf,
+                slot: slotNum,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: currentUser.email
+            });
+            await loadData();
+        }
+
+        async function removeFromSlot(boxId) {
+            if (!confirm('このボックスをスロットから取り出しますか？')) return;
+
+            const box = boxes.find(b => b.id === boxId);
+            await db.collection('freezerBoxes').doc(boxId).update({
+                freezerType: null,
+                shelf: null,
+                slot: null,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: currentUser.email
+            });
+            closeModal('slotModal');
+            await loadData();
+        }
+
+        // 未配置ボックス
+        function renderUnassignedBoxes() {
+            const unassigned = boxes.filter(b => !b.freezerType || !b.shelf);
+            const container = document.getElementById('unassignedBoxes');
+            const list = document.getElementById('unassignedList');
+
+            if (unassigned.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            list.innerHTML = unassigned.map(box => `
+                <div class="unassigned-box" draggable="true"
+                     ondragstart="startDragUnassigned(event, '${box.id}')"
+                     onclick="showBoxDetail('${box.id}')">
+                    ${box.name}${box.year ? ` (${box.year})` : ''}
+                </div>
+            `).join('');
+        }
+
+        function startDragUnassigned(e, boxId) {
+            draggedBox = boxes.find(b => b.id === boxId);
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        // ボックス一覧
+        function renderBoxList() {
+            const container = document.getElementById('boxListContainer');
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+
+            const filtered = boxes.filter(b =>
+                !searchTerm || b.name.toLowerCase().includes(searchTerm)
+            );
+
+            if (filtered.length === 0) {
+                container.innerHTML = '<p style="color: #999;">ボックスが登録されていません</p>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(box => {
+                const location = box.freezerType && box.shelf && box.slot
+                    ? `${box.freezerType}°C / ${box.shelf}段目 / スロット${box.slot}`
+                    : '未配置';
+                return `
+                    <div class="box-list-item">
+                        <div>
+                            <strong>${box.name}</strong>
+                            ${box.year ? `<span style="color: #666; margin-left: 10px;">${box.year}年</span>` : ''}
+                            <div class="box-location">${location}</div>
+                        </div>
+                        <button class="btn btn-secondary btn-sm" onclick="showBoxDetail('${box.id}')">詳細</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function searchBox() {
+            renderBoxList();
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            // ハイライト
+            document.querySelectorAll('.slot').forEach(slot => {
+                const freezerType = slot.dataset.freezerType;
+                const shelf = parseInt(slot.dataset.shelf);
+                const slotNum = parseInt(slot.dataset.slot);
+
+                const slotBoxes = boxes.filter(b =>
+                    b.freezerType === freezerType &&
+                    b.shelf === shelf &&
+                    b.slot === slotNum &&
+                    b.name.toLowerCase().includes(searchTerm)
+                );
+
+                if (searchTerm && slotBoxes.length > 0) {
+                    slot.classList.add('highlight');
+                } else {
+                    slot.classList.remove('highlight');
+                }
+            });
+        }
+
+        // ボックス追加
+        function openAddBoxModal() {
+            document.getElementById('boxName').value = '';
+            document.getElementById('boxYear').value = new Date().getFullYear();
+            document.getElementById('boxMemo').value = '';
+            document.getElementById('addBoxModal').classList.add('active');
+        }
+
+        async function addBox(event) {
+            event.preventDefault();
+            const name = document.getElementById('boxName').value.trim();
+            const year = document.getElementById('boxYear').value.trim();
+            const memo = document.getElementById('boxMemo').value.trim();
+
+            if (!name) return;
+
+            await db.collection('freezerBoxes').add({
+                name: name,
+                year: year,
+                memo: memo,
+                freezerType: null,
+                shelf: null,
+                slot: null,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy: currentUser.email
+            });
+
+            closeModal('addBoxModal');
+            await loadData();
+            alert('ボックスを登録しました');
+        }
+
+        // ボックス詳細
+        function showBoxDetail(boxId) {
+            const box = boxes.find(b => b.id === boxId);
+            if (!box) return;
+
+            const location = box.freezerType && box.shelf && box.slot
+                ? `${box.freezerType}°C 冷凍庫 / ${box.shelf}段目 / スロット${box.slot}`
+                : '未配置';
+
+            // 移動先の選択肢を生成
+            let moveOptions = '<option value="">移動先を選択</option>';
+            ['-80', '-20'].forEach(ft => {
+                const config = FREEZER_CONFIG[ft];
+                for (let s = 1; s <= config.shelves; s++) {
+                    const slotsPerShelf = config.cols * config.rows;
+                    for (let sl = 1; sl <= slotsPerShelf; sl++) {
+                        const count = boxes.filter(b => b.freezerType === ft && b.shelf === s && b.slot === sl).length;
+                        if (count < config.maxPerSlot) {
+                            const current = (box.freezerType === ft && box.shelf === s && box.slot === sl) ? ' (現在)' : '';
+                            moveOptions += `<option value="${ft}|${s}|${sl}">${ft}°C / ${s}段目 / スロット${sl} (${count}/12)${current}</option>`;
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('boxDetailContent').innerHTML = `
+                <div class="form-group">
+                    <label>ボックス名</label>
+                    <input type="text" id="editBoxName" value="${box.name || ''}">
+                </div>
+                <div class="form-group">
+                    <label>年度</label>
+                    <input type="text" id="editBoxYear" value="${box.year || ''}">
+                </div>
+                <div class="form-group">
+                    <label>メモ</label>
+                    <input type="text" id="editBoxMemo" value="${box.memo || ''}">
+                </div>
+                <div class="form-group">
+                    <label>保存場所</label>
+                    <p style="padding: 10px; background: #f8f9fa; border-radius: 5px;">${location}</p>
+                </div>
+                <button class="btn btn-success" onclick="saveBoxEdit('${box.id}')" style="width: 100%; margin-bottom: 15px;">変更を保存</button>
+
+                <hr style="margin: 20px 0;">
+                <div class="form-group">
+                    <label>別のスロットに移動</label>
+                    <select id="moveDestination" style="margin-bottom: 10px;">
+                        ${moveOptions}
+                    </select>
+                    <button class="btn" onclick="moveBoxToNewSlot('${box.id}')">移動</button>
+                </div>
+                <hr style="margin: 20px 0;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    ${box.freezerType ? `<button class="btn btn-secondary" onclick="removeBoxFromSlot('${box.id}')">スロットから取り出す</button>` : ''}
+                    <button class="btn btn-danger" onclick="deleteBox('${box.id}')">削除</button>
+                </div>
+            `;
+            closeModal('slotModal');
+            document.getElementById('boxDetailModal').classList.add('active');
+        }
+
+        async function saveBoxEdit(boxId) {
+            const name = document.getElementById('editBoxName').value.trim();
+            const year = document.getElementById('editBoxYear').value.trim();
+            const memo = document.getElementById('editBoxMemo').value.trim();
+
+            if (!name) {
+                alert('ボックス名を入力してください');
+                return;
+            }
+
+            await db.collection('freezerBoxes').doc(boxId).update({
+                name: name,
+                year: year,
+                memo: memo,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: currentUser.email
+            });
+
+            closeModal('boxDetailModal');
+            await loadData();
+            alert('保存しました');
+        }
+
+        async function moveBoxToNewSlot(boxId) {
+            const dest = document.getElementById('moveDestination').value;
+            if (!dest) {
+                alert('移動先を選択してください');
+                return;
+            }
+            const [freezerType, shelf, slot] = dest.split('|');
+            await moveBoxToSlot(boxId, freezerType, parseInt(shelf), parseInt(slot));
+            closeModal('boxDetailModal');
+        }
+
+        async function removeBoxFromSlot(boxId) {
+            if (!confirm('このボックスをスロットから取り出しますか？')) return;
+
+            await db.collection('freezerBoxes').doc(boxId).update({
+                freezerType: null,
+                shelf: null,
+                slot: null,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+                updatedBy: currentUser.email
+            });
+
+            closeModal('boxDetailModal');
+            await loadData();
+        }
+
+        async function deleteBox(boxId) {
+            if (!confirm('このボックスを削除しますか？')) return;
+
+            await db.collection('freezerBoxes').doc(boxId).delete();
+            closeModal('boxDetailModal');
+            await loadData();
+        }
+
+        // モーダル
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // ドラッグ終了時
+        document.addEventListener('dragend', () => {
+            draggedBox = null;
+            document.querySelectorAll('.slot.drag-over').forEach(slot => {
+                slot.classList.remove('drag-over');
+            });
+        });
+
+        // Excelエクスポート
+        function exportToExcel() {
+            // ボックス一覧シート
+            const boxRows = boxes.map(box => {
+                const location = box.freezerType && box.shelf && box.slot
+                    ? `${box.freezerType}°C / ${box.shelf}段目 / スロット${box.slot}`
+                    : '未配置';
+                return {
+                    'ボックス名': box.name,
+                    '年度': box.year || '',
+                    'メモ': box.memo || '',
+                    '冷凍庫': box.freezerType ? `${box.freezerType}°C` : '未配置',
+                    '段': box.shelf || '',
+                    'スロット': box.slot || '',
+                    '保存場所': location
+                };
+            });
+
+            // -80°C マップシート
+            const map80Rows = [];
+            const config80 = FREEZER_CONFIG['-80'];
+            for (let shelf = 1; shelf <= config80.shelves; shelf++) {
+                for (let slot = 1; slot <= config80.cols * config80.rows; slot++) {
+                    const slotBoxes = boxes.filter(b =>
+                        b.freezerType === '-80' && b.shelf === shelf && b.slot === slot
+                    );
+                    map80Rows.push({
+                        '段': shelf,
+                        'スロット': slot,
+                        'ボックス数': slotBoxes.length,
+                        'ボックス名': slotBoxes.map(b => b.name).join(', ')
+                    });
+                }
+            }
+
+            // -20°C マップシート
+            const map20Rows = [];
+            const config20 = FREEZER_CONFIG['-20'];
+            for (let shelf = 1; shelf <= config20.shelves; shelf++) {
+                for (let slot = 1; slot <= config20.cols * config20.rows; slot++) {
+                    const slotBoxes = boxes.filter(b =>
+                        b.freezerType === '-20' && b.shelf === shelf && b.slot === slot
+                    );
+                    map20Rows.push({
+                        '段': shelf,
+                        'スロット': slot,
+                        'ボックス数': slotBoxes.length,
+                        'ボックス名': slotBoxes.map(b => b.name).join(', ')
+                    });
+                }
+            }
+
+            // ワークブック作成
+            const wb = XLSX.utils.book_new();
+
+            const boxSheet = XLSX.utils.json_to_sheet(boxRows);
+            XLSX.utils.book_append_sheet(wb, boxSheet, 'ボックス一覧');
+
+            const map80Sheet = XLSX.utils.json_to_sheet(map80Rows);
+            XLSX.utils.book_append_sheet(wb, map80Sheet, '-80°C マップ');
+
+            const map20Sheet = XLSX.utils.json_to_sheet(map20Rows);
+            XLSX.utils.book_append_sheet(wb, map20Sheet, '-20°C マップ');
+
+            // ダウンロード
+            const today = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `冷凍庫マップ_${today}.xlsx`);
+        }
+    </script>
+</body>
+</html>
